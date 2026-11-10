@@ -51,10 +51,6 @@ window.__ModuleLoader__.load({
       "docs.label": "显示名称（可选）",
       "docs.placeholder": "C:\\notes 或 ./docs",
       "docs.empty": "还没有本地文档。",
-      "docs.useCwd": "使用当前目录",
-      "cwd.title": "工作目录",
-      "cwd.desc": "相对路径以此目录为基准；可填写绝对路径。",
-      "cwd.placeholder": "C:\\work 或 /home/me/work",
       "ai.title": "AI 分析",
       "ai.desc": "使用当前默认模型分析提交说明、代码变更和文档摘要，生成按天简要总结。",
       "ai.enable": "启用 AI 分析",
@@ -163,10 +159,6 @@ window.__ModuleLoader__.load({
       "docs.label": "Display name (optional)",
       "docs.placeholder": "C:\\notes or ./docs",
       "docs.empty": "No documents yet.",
-      "docs.useCwd": "Use current directory",
-      "cwd.title": "Working directory",
-      "cwd.desc": "Relative paths resolve from this directory; an absolute path is allowed.",
-      "cwd.placeholder": "C:\\work or /home/me/work",
       "ai.title": "AI analysis",
       "ai.desc": "Use the current default model to analyze commit messages, code changes and document excerpts into concise per-day summaries.",
       "ai.enable": "Enable AI analysis",
@@ -297,7 +289,7 @@ window.__ModuleLoader__.load({
       return { git, docs, mineOnly: source.mineOnly !== false };
     }
 
-    function cleanSettings(settings, aiEnabled) {
+    function cleanSettings(settings, aiEnabled, range) {
       return {
         git: settings.git
           .map((item) => ({
@@ -314,6 +306,10 @@ window.__ModuleLoader__.load({
           .filter((item) => item.location.length > 0),
         aiEnabled: aiEnabled !== false,
         mineOnly: settings.mineOnly !== false,
+        range:
+          range && typeof range.start === "string" && typeof range.end === "string"
+            ? { start: range.start, end: range.end }
+            : null,
       };
     }
 
@@ -497,7 +493,6 @@ window.__ModuleLoader__.load({
       const t = useTranslate(ctx);
       const [settings, setSettings] = React.useState({ git: [], docs: [] });
       const [range, setRange] = React.useState(currentMonthRange);
-      const [cwd, setCwd] = React.useState("");
       const [aiInfo, setAiInfo] = React.useState({ available: false, provider: "", model: "" });
       const [useAi, setUseAi] = React.useState(true);
       const [loading, setLoading] = React.useState(true);
@@ -552,14 +547,16 @@ window.__ModuleLoader__.load({
             if (!alive) return;
             setSettings(normalizeClientSettings(payload && payload.settings));
             setUseAi(!(payload && payload.settings && payload.settings.aiEnabled === false));
-            setCwd(payload && typeof payload.cwd === "string" ? payload.cwd : "");
             const nextAi = payload && payload.ai ? payload.ai : { available: false, provider: "", model: "" };
             setAiInfo({
               available: nextAi.available === true,
               provider: typeof nextAi.provider === "string" ? nextAi.provider : "",
               model: typeof nextAi.model === "string" ? nextAi.model : "",
             });
-            if (payload && payload.defaults && payload.defaults.start && payload.defaults.end) {
+            const savedRange = payload && payload.settings && payload.settings.range;
+            if (savedRange && typeof savedRange.start === "string" && typeof savedRange.end === "string") {
+              setRange({ start: savedRange.start, end: savedRange.end });
+            } else if (payload && payload.defaults && payload.defaults.start && payload.defaults.end) {
               setRange({ start: payload.defaults.start, end: payload.defaults.end });
             }
             setLoadError(payload && payload.warning ? payload.warning : "");
@@ -593,7 +590,7 @@ window.__ModuleLoader__.load({
             saveTimerRef.current = null;
           }
         };
-      }, [settings, useAi, loading]);
+      }, [settings, useAi, range, loading]);
 
       function updateGit(index, patch) {
         setSettings((previous) => ({
@@ -631,14 +628,6 @@ window.__ModuleLoader__.load({
         setSettings((previous) => ({ ...previous, docs: previous.docs.filter((_, itemIndex) => itemIndex !== index) }));
       }
 
-      function useCurrentDirectory() {
-        const value = cwd || ".";
-        setSettings((previous) => ({
-          ...previous,
-          docs: [...previous.docs, { _key: uid(), location: value, label: "" }],
-        }));
-      }
-
       async function persistSettings() {
         if (saveAbortRef.current) saveAbortRef.current.abort();
         const controller = new AbortController();
@@ -648,7 +637,7 @@ window.__ModuleLoader__.load({
           const response = await fetch(API + "/state", {
             method: "PUT",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ settings: cleanSettings(settings, useAi) }),
+            body: JSON.stringify({ settings: cleanSettings(settings, useAi, range) }),
             signal: controller.signal,
           });
           if (!response.ok) throw new Error("save-failed");
@@ -672,7 +661,6 @@ window.__ModuleLoader__.load({
       function toggleScan() {
         const next = !showScan;
         setShowScan(next);
-        if (next && scanDir.trim().length === 0) setScanDir(cwd || "");
         setScanError("");
         setScanMessage("");
       }
@@ -708,7 +696,7 @@ window.__ModuleLoader__.load({
           const response = await fetch(API + "/scan", {
             method: "POST",
             headers: { "content-type": "application/json", accept: "application/json" },
-            body: JSON.stringify({ directory, cwd: cwd.trim() }),
+            body: JSON.stringify({ directory }),
           });
           if (!response.ok) {
             let payload = null;
@@ -933,7 +921,7 @@ window.__ModuleLoader__.load({
 
       async function generate() {
         if (generating) return;
-        const cleaned = cleanSettings(settings, useAi);
+        const cleaned = cleanSettings(settings, useAi, range);
         if (cleaned.git.length === 0 && cleaned.docs.length === 0) {
           setError(t("error.noSources", "请至少添加一个 Git 仓库或本地文档。"));
           return;
@@ -966,7 +954,6 @@ window.__ModuleLoader__.load({
               start: range.start,
               end: range.end,
               sessionId,
-              cwd: cwd.trim(),
               ai: useAi && aiInfo.available,
               locale: currentLocaleId(ctx).toLowerCase().startsWith("en") ? "en" : "zh",
             }),
@@ -1352,28 +1339,6 @@ window.__ModuleLoader__.load({
               h(
                 "div",
                 null,
-                h("div", { className: "dsdr-card-title" }, t("cwd.title", "工作目录")),
-                h("div", { className: "dsdr-card-desc" }, t("cwd.desc", "相对路径以此目录为基准；可填写绝对路径。")),
-              ),
-            ),
-            h("input", {
-              id: "dsdr-cwd",
-              className: "dsdr-input",
-              value: cwd,
-              placeholder: t("cwd.placeholder", "C:\\work 或 /home/me/work"),
-              onChange: (event) => setCwd(event.target.value),
-            }),
-          ),
-
-          h(
-            "section",
-            { className: "dsdr-card" },
-            h(
-              "div",
-              { className: "dsdr-card-head" },
-              h(
-                "div",
-                null,
                 h("div", { className: "dsdr-card-title" }, t("ai.title", "AI 分析")),
                 h("div", { className: "dsdr-card-desc" }, t("ai.desc", "使用当前默认模型分析提交说明、代码变更和文档摘要，生成按天简要总结。")),
               ),
@@ -1526,7 +1491,6 @@ window.__ModuleLoader__.load({
               h(
                 "div",
                 { className: "dsdr-actions" },
-                h("button", { type: "button", className: "dsdr-btn", onClick: useCurrentDirectory }, t("docs.useCwd", "使用当前目录")),
                 h("button", { type: "button", className: "dsdr-btn", onClick: addDoc }, "+ " + t("docs.add", "添加文档/目录")),
               ),
             ),

@@ -42,6 +42,7 @@ const DEFAULT_SETTINGS = {
   docs: [],
   aiEnabled: true,
   mineOnly: true,
+  range: null,
 };
 
 function defaultSettings() {
@@ -518,13 +519,10 @@ export function apply(ctx) {
       if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method === "GET") {
         const saved = await readSettings();
-        const url = new URL(req.url || "/", "http://127.0.0.1");
-        const cwd = resolveCwd(ctx, url.searchParams.get("sessionId") || "");
         return sendJson(res, 200, {
           settings: saved.settings,
           saved: saved.saved,
           warning: saved.warning,
-          cwd,
           defaults: defaultMonthRange(new Date()),
           ai: aiInfo(ctx),
         });

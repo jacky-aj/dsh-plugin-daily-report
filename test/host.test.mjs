@@ -101,7 +101,6 @@ function request(url, method, body) {
 const getState = await request("/daily-report/state?sessionId=", "GET");
 assert.equal(getState.status, 200);
 const state = JSON.parse(getState.body.toString("utf8"));
-assert.equal(state.cwd, root);
 assert.equal(state.defaults.start, "2026-11-01");
 assert.equal(state.defaults.end, "2026-11-30");
 assert.equal(state.settings.git.length, 0);
@@ -112,11 +111,14 @@ const putState = await request("/daily-report/state", "PUT", {
     git: [{ location: repo, branch: "main", label: "本地仓库" }],
     docs: [{ location: notes, label: "笔记" }],
     aiEnabled: false,
+    range: { start: "2026-10-01", end: "2026-10-31" },
   },
 });
 assert.equal(putState.status, 200);
 const savedState = await request("/daily-report/state?sessionId=", "GET");
-assert.equal(JSON.parse(savedState.body.toString("utf8")).settings.aiEnabled, false);
+const savedPayload = JSON.parse(savedState.body.toString("utf8"));
+assert.equal(savedPayload.settings.aiEnabled, false);
+assert.deepEqual(savedPayload.settings.range, { start: "2026-10-01", end: "2026-10-31" });
 
 const generate = await request("/daily-report/generate", "POST", {
   settings: {
