@@ -18,6 +18,7 @@ import {
   sanitizeSettings,
 } from "./lib/collect.js";
 import { aiInfo, analyzeReport, regenerateDay } from "./lib/ai.js";
+import { buildCsvReport, buildHtmlReport, buildMarkdownReport } from "./lib/formats.js";
 import { buildReportWorkbook, reportFileName, summarizeReport, buildReportPreview, applyReportEdits } from "./lib/report.js";
 
 export const inject = ["webServer"];
@@ -36,12 +37,32 @@ const MAX_RANGE_DAYS = 366;
 const JOB_TTL = 60 * 60 * 1000;
 const MAX_JOBS = 20;
 const jobs = new Map();
+const REPORT_FORMATS = new Set(["xlsx", "markdown", "csv", "html"]);
+
+function normalizeFormat(value) {
+  return typeof value === "string" && REPORT_FORMATS.has(value) ? value : "xlsx";
+}
+
+function formatContentType(format) {
+  if (format === "markdown") return "text/markdown; charset=utf-8";
+  if (format === "csv") return "text/csv; charset=utf-8";
+  if (format === "html") return "text/html; charset=utf-8";
+  return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+}
+
+function buildReportBuffer(result, format) {
+  if (format === "markdown") return Buffer.from(buildMarkdownReport(result), "utf8");
+  if (format === "csv") return Buffer.from(buildCsvReport(result), "utf8");
+  if (format === "html") return Buffer.from(buildHtmlReport(result), "utf8");
+  return buildReportWorkbook(result);
+}
 
 const DEFAULT_SETTINGS = {
   git: [],
   docs: [],
   aiEnabled: true,
   mineOnly: true,
+  format: "xlsx",
   range: null,
 };
 
@@ -80,12 +101,13 @@ function sendError(res, status, code, message, details) {
   sendJson(res, status, body);
 }
 
-function sendReportFile(res, buffer, filename, summary) {
+function sendReportFile(res, buffer, filename, summary, contentType) {
   const summaryHeader = Buffer.from(JSON.stringify(summary), "utf8").toString("base64");
   const encodedName = encodeURIComponent(filename);
+  const extension = filename.includes(".") ? filename.slice(filename.lastIndexOf(".") + 1) : "xlsx";
   res.statusCode = 200;
-  res.setHeader("content-type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-  res.setHeader("content-disposition", 'attachment; filename="daily-report.xlsx"; filename*=UTF-8\'\'' + encodedName);
+  res.setHeader("content-type", contentType || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("content-disposition", 'attachment; filename="daily-report.' + extension + '"; filename*=UTF-8\'\'' + encodedName);
   res.setHeader("content-length", String(buffer.length));
   res.setHeader("cache-control", "no-store");
   res.setHeader("x-report-filename", encodedName);
@@ -320,10 +342,6 @@ function registerRoute(ctx, path, handler, label) {
   ctx.effect(() => dispose, label);
 }
 
-function outputPathFor(cwd, start, end) {
-  return join(cwd, reportFileName(start, end));
-}
-
 function ensureAbsolute(cwd, value) {
   if (typeof value !== "string" || value.trim().length === 0) return "";
   return isAbsolute(value) ? resolve(value) : resolve(cwd, value);
@@ -380,8 +398,9 @@ function registerTool(ctx) {
           description: "Local document files or directories. When omitted, the saved plugin configuration is used.",
           items: { type: "string" },
         },
-        outputPath: { type: "string", description: "Optional output XLSX path. Defaults to the session working directory." },
+        outputPath: { type: "string", description: "Optional output path. Defaults to the session working directory." },
         ai: { type: "boolean", description: "Analyze commit diffs, commit messages and document excerpts with the current default model, then add per-day AI summaries to the workbook." },
+        format: { type: "string", enum: ["xlsx", "markdown", "csv", "html"], description: "Output format. Defaults to xlsx." },
         locale: { type: "string", enum: ["zh", "en"], description: "Report language. Defaults to zh." },
       },
     },
@@ -481,9 +500,9 @@ function registerTool(ctx) {
           for (const warning of result.ai.warnings || []) result.warnings.push("AI 分析：" + warning);
         }
       }
-      const filename = reportFileName(start, end);
-      const target = ensureAbsolute(cwd, input.outputPath) || outputPathFor(cwd, start, end);
-      const buffer = buildReportWorkbook(result);
+      const filename = reportFileName(start, end, normalizeFormat(input.format));
+      const target = ensureAbsolute(cwd, input.outputPath) || join(cwd, filename);
+      const buffer = buildReportBuffer(result, normalizeFormat(input.format));
       await fs.mkdir(dirname(target), { recursive: true });
       await fs.writeFile(target, buffer);
       return {
@@ -720,8 +739,10 @@ export function apply(ctx) {
       if (job.status !== "done" || !job.result) return sendError(res, 409, "job-not-ready", "生成任务尚未完成。");
       try {
         const edited = applyReportEdits(job.result, body.edits || {});
-        const buffer = buildReportWorkbook(edited);
-        return sendReportFile(res, buffer, job.filename, summarizeReport(edited));
+        const format = normalizeFormat(body.format);
+        const buffer = buildReportBuffer(edited, format);
+        const filename = reportFileName(edited.range.start, edited.range.end, format);
+        return sendReportFile(res, buffer, filename, summarizeReport(edited), formatContentType(format));
       } catch (error) {
         return sendError(res, 400, "export-failed", error.message || "导出日报失败。");
       }

@@ -111,6 +111,7 @@ const putState = await request("/daily-report/state", "PUT", {
     git: [{ location: repo, branch: "main", label: "本地仓库" }],
     docs: [{ location: notes, label: "笔记" }],
     aiEnabled: false,
+    format: "markdown",
     range: { start: "2026-10-01", end: "2026-10-31" },
   },
 });
@@ -118,6 +119,7 @@ assert.equal(putState.status, 200);
 const savedState = await request("/daily-report/state?sessionId=", "GET");
 const savedPayload = JSON.parse(savedState.body.toString("utf8"));
 assert.equal(savedPayload.settings.aiEnabled, false);
+assert.equal(savedPayload.settings.format, "markdown");
 assert.deepEqual(savedPayload.settings.range, { start: "2026-10-01", end: "2026-10-31" });
 
 const generate = await request("/daily-report/generate", "POST", {
@@ -181,6 +183,16 @@ const exportResponse = await request("/daily-report/job/export", "POST", {
 assert.equal(exportResponse.status, 200);
 assert.ok(exportResponse.body.length > 5000);
 assert.match(decodeURIComponent(exportResponse.headers["x-report-filename"]), /\.xlsx$/);
+
+const markdownExport = await request("/daily-report/job/export", "POST", {
+  jobId: startPayload.jobId,
+  format: "markdown",
+  edits: { overall: "", days: [] },
+});
+assert.equal(markdownExport.status, 200);
+assert.equal(markdownExport.headers["content-type"], "text/markdown; charset=utf-8");
+assert.match(decodeURIComponent(markdownExport.headers["x-report-filename"]), /\.md$/);
+assert.match(markdownExport.body.toString("utf8"), /# 日报汇总/);
 
 const scan = await request("/daily-report/scan", "POST", { directory: root, cwd: root });
 assert.equal(scan.status, 200);

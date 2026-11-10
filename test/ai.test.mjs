@@ -6,6 +6,7 @@ import { join } from "node:path";
 
 import { collectReport } from "../lib/collect.js";
 import { analyzeReport, aiInfo, buildAiPrompt } from "../lib/ai.js";
+import { buildCsvReport, buildHtmlReport, buildMarkdownReport } from "../lib/formats.js";
 import { buildReportWorkbook, summarizeReport } from "../lib/report.js";
 
 const root = mkdtempSync(join(tmpdir(), "daily-report-ai-"));
@@ -129,6 +130,14 @@ assert.equal(summary.ai.days, undefined);
 assert.match(summary.ai.overall, /登录/);
 const workbook = buildReportWorkbook(result);
 assert.ok(workbook.length > 5000);
+const markdown = buildMarkdownReport(result);
+assert.match(markdown, /# 日报汇总/);
+assert.match(markdown, /实现登录校验/);
+const csv = buildCsvReport(result);
+assert.match(csv, /^﻿"日期"/);
+const html = buildHtmlReport(result);
+assert.match(html, /<html lang="zh-CN">/);
+assert.match(html, /实现登录校验/);
 writeFileSync(new URL("./fixtures/ai-sample.xlsx", import.meta.url), workbook);
 console.log(JSON.stringify({ ok: true, promptChars: prompt.length, workbookBytes: workbook.length, ai: summary.ai }, null, 2));
 rmSync(root, { recursive: true, force: true });

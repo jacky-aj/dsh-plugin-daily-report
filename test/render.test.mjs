@@ -30,11 +30,12 @@ const ReactMock = {
   },
   useState(initial) {
     stateIndex += 1;
-    if (stateIndex === 4) return [{ available: true, provider: "test", model: "mock-model" }, () => {}];
-    if (stateIndex === 6) return [false, () => {}];
-    if (stateIndex === 10) return [true, () => {}];
-    if (stateIndex === 11) return [{ percent: 78, indeterminate: true, message: "模型正在生成分析…" }, () => {}];
-    if (stateIndex === 12) {
+    if (stateIndex === 5) return [true, () => {}];
+    if (stateIndex === 6) return [{ available: true, provider: "test", model: "mock-model" }, () => {}];
+    if (stateIndex === 8) return [false, () => {}];
+    if (stateIndex === 12) return [true, () => {}];
+    if (stateIndex === 13) return [{ percent: 78, indeterminate: true, message: "模型正在生成分析…" }, () => {}];
+    if (stateIndex === 14) {
       return [
         {
           filename: "demo.xlsx",
@@ -47,7 +48,7 @@ const ReactMock = {
         () => {},
       ];
     }
-    if (stateIndex === 18) {
+    if (stateIndex === 20) {
       return [
         {
           range: { start: "2026-11-01", end: "2026-11-30" },
@@ -69,7 +70,7 @@ const ReactMock = {
         () => {},
       ];
     }
-    if (stateIndex === 24) return [{ "2026-11-02": true }, () => {}];
+    if (stateIndex === 26) return [{ "2026-11-02": true }, () => {}];
     return [typeof initial === "function" ? initial() : initial, () => {}];
   },
   useEffect() {},
@@ -127,6 +128,7 @@ function hasClass(node, className) {
 assert.equal(hasClass(tree, "dsdr-progress-card"), true);
 assert.equal(hasClass(tree, "dsdr-ai-result"), true);
 assert.equal(hasClass(tree, "dsdr-save-btn"), true);
+assert.ok(JSON.stringify(tree).includes("dsdr-menu"));
 assert.equal(hasClass(tree, "dsdr-preview-card"), true);
 assert.ok(JSON.stringify(tree).includes("dsdr-preview-toggle"));
 const icon = registrations[1].component({ size: 20, active: true });

@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-daily-report",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "按天汇总多个 Git 仓库、分支与本地文档，支持 AI 分析并导出 XLSX 日报。",
   "license": "MIT",
   "type": "module",

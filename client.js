@@ -63,7 +63,12 @@ window.__ModuleLoader__.load({
       "progress.hint": "AI 分析需要调用模型，耗时通常比普通汇总更长；请保持页面打开。",
       optional: "可选",
       remove: "移除",
-      generate: "生成 XLSX 日报",
+      generate: "生成日报",
+      "format.label": "格式",
+      "format.xlsx": "XLSX 工作簿",
+      "format.markdown": "Markdown 文档",
+      "format.csv": "CSV 表格",
+      "format.html": "HTML 网页",
       generating: "正在收集并生成…",
       "save.saving": "正在保存设置…",
       "save.savingShort": "正在保存…",
@@ -85,7 +90,7 @@ window.__ModuleLoader__.load({
       "result.ai.failed": "AI 分析未完成",
       "preview.title": "生成结果预览",
       "preview.desc": "先检查并编辑每日 AI 摘要、补充非代码工作，再导出 XLSX。",
-      "preview.export": "导出 XLSX",
+      "preview.export": "导出",
       "preview.expandAll": "全部展开",
       "preview.collapseAll": "全部收起",
       "preview.exporting": "正在导出…",
@@ -171,7 +176,12 @@ window.__ModuleLoader__.load({
       "progress.hint": "AI analysis calls a model, so it usually takes longer than a plain digest. Keep this page open.",
       optional: "optional",
       remove: "Remove",
-      generate: "Generate XLSX report",
+      generate: "Generate report",
+      "format.label": "Format",
+      "format.xlsx": "XLSX workbook",
+      "format.markdown": "Markdown document",
+      "format.csv": "CSV table",
+      "format.html": "HTML page",
       generating: "Collecting and generating…",
       "save.saving": "Saving settings…",
       "save.savingShort": "Saving…",
@@ -193,7 +203,7 @@ window.__ModuleLoader__.load({
       "result.ai.failed": "AI analysis did not complete",
       "preview.title": "Review before export",
       "preview.desc": "Check and edit each day's AI summary, add non-code work, then export the XLSX.",
-      "preview.export": "Export XLSX",
+      "preview.export": "Export",
       "preview.expandAll": "Expand all",
       "preview.collapseAll": "Collapse all",
       "preview.exporting": "Exporting…",
@@ -289,7 +299,7 @@ window.__ModuleLoader__.load({
       return { git, docs, mineOnly: source.mineOnly !== false };
     }
 
-    function cleanSettings(settings, aiEnabled, range) {
+    function cleanSettings(settings, aiEnabled, range, format) {
       return {
         git: settings.git
           .map((item) => ({
@@ -306,6 +316,7 @@ window.__ModuleLoader__.load({
           .filter((item) => item.location.length > 0),
         aiEnabled: aiEnabled !== false,
         mineOnly: settings.mineOnly !== false,
+        format: FORMAT_OPTIONS.includes(format) ? format : "xlsx",
         range:
           range && typeof range.start === "string" && typeof range.end === "string"
             ? { start: range.start, end: range.end }
@@ -339,6 +350,23 @@ window.__ModuleLoader__.load({
       }
     }
 
+    const FORMAT_OPTIONS = ["xlsx", "markdown", "csv", "html"];
+
+    function formatLabel(format, t) {
+      if (format === "markdown") return t("format.markdown", "Markdown");
+      if (format === "csv") return t("format.csv", "CSV");
+      if (format === "html") return t("format.html", "HTML");
+      return t("format.xlsx", "XLSX");
+    }
+
+    function formatExtension(format) {
+      return format === "markdown" ? "md" : format;
+    }
+
+    function formatShortLabel(format) {
+      return format === "markdown" ? "Markdown" : format.toUpperCase();
+    }
+
     function useTranslate(ctx) {
       const [, force] = React.useState(0);
       React.useEffect(() => {
@@ -359,8 +387,20 @@ window.__ModuleLoader__.load({
       ".dsdr-hero-copy { flex: 1; min-width: 0; }",
       ".dsdr-hero-action { display: flex; flex: none; flex-direction: column; align-items: flex-end; gap: 5px; margin-left: auto; }",
       ".dsdr-hero-buttons { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }",
-      ".dsdr-save-btn { min-height: 38px; }",
-      ".dsdr-generate { min-height: 38px; padding: 9px 18px; font-size: 13px; white-space: nowrap; }",
+      ".dsdr-save-btn { min-height: 38px; background: #3b4046; border-color: #3b4046; color: #ffffff; font-weight: 600; }",
+      ".dsdr-save-btn:hover { background: #292d31; border-color: #292d31; }",
+      ".dsdr-save-btn:disabled { background: #666b70; border-color: #666b70; color: #ffffff; opacity: .8; }",
+      ".dsdr-generate { min-height: 38px; padding: 9px 16px; font-size: 13px; white-space: nowrap; }",
+      ".dsdr-btn-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }",
+      ".dsdr-split { position: relative; display: inline-flex; align-items: stretch; }",
+      ".dsdr-split .dsdr-generate { border-radius: 8px 0 0 8px; }",
+      ".dsdr-split-toggle { min-height: 38px; padding: 0 9px; border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255, 255, 255, .32); }",
+      ".dsdr-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; min-width: 190px; padding: 5px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 10px; background: var(--dsw-alias-bg-overlay); box-shadow: 0 10px 28px rgba(0, 0, 0, .2); }",
+      ".dsdr-menu-title { padding: 5px 8px 4px; color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }",
+      ".dsdr-menu-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 7px 8px; border: 0; border-radius: 7px; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; line-height: 18px; text-align: left; cursor: pointer; }",
+      ".dsdr-menu-item:hover { background: var(--dsw-alias-bg-layer-2); }",
+      ".dsdr-menu-item.is-active { background: var(--dsw-alias-bg-layer-2); font-weight: 600; }",
+      ".dsdr-menu-check { width: 14px; color: #146b5a; text-align: center; }",
       ".dsdr-save { color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }",
       ".dsdr-mark { flex: none; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; background: var(--dsw-alias-bg-layer-2); border: 1px solid var(--dsw-alias-border-l1); }",
       ".dsdr-title { margin: 0; font-size: 22px; line-height: 30px; font-weight: 600; }",
@@ -380,9 +420,9 @@ window.__ModuleLoader__.load({
       ".dsdr-btn:hover { background: var(--dsw-alias-bg-layer-1); border-color: var(--dsw-alias-brand-primary); }",
       ".dsdr-btn:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }",
       ".dsdr-btn:disabled { opacity: .7; cursor: not-allowed; }",
-      ".dsdr-btn-primary { background: #15557f; border-color: #15557f; color: #ffffff; font-weight: 600; box-shadow: 0 2px 6px rgba(0, 0, 0, .18); }",
-      ".dsdr-btn-primary:hover { background: #103f5f; border-color: #103f5f; opacity: 1; }",
-      ".dsdr-btn-primary:disabled { background: #5e7c8f; border-color: #5e7c8f; color: #ffffff; opacity: .8; }",
+      ".dsdr-btn-primary { background: #146b5a; border-color: #146b5a; color: #ffffff; font-weight: 600; box-shadow: 0 2px 6px rgba(0, 0, 0, .18); }",
+      ".dsdr-btn-primary:hover { background: #0f5547; border-color: #0f5547; opacity: 1; }",
+      ".dsdr-btn-primary:disabled { background: #6b8a82; border-color: #6b8a82; color: #ffffff; opacity: .8; }",
       ".dsdr-btn-danger { border-color: transparent; background: transparent; color: var(--dsw-alias-state-error-primary); font-weight: 600; }",
       ".dsdr-btn-danger:hover { background: var(--dsw-alias-bg-layer-2); border-color: transparent; }",
       ".dsdr-check { display: inline-flex; align-items: center; gap: 7px; color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 20px; cursor: pointer; white-space: nowrap; }",
@@ -443,7 +483,7 @@ window.__ModuleLoader__.load({
       ".dsdr-code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; }",
       ".dsdr-footer { color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 17px; }",
       ".dsdr-spacer { flex: 1; }",
-      "@media (max-width: 780px) { .dsdr-page { padding: 20px 16px 40px; } .dsdr-hero-action { flex: 1 0 100%; width: 100%; align-items: stretch; margin-left: 0; } .dsdr-hero-buttons { width: 100%; } .dsdr-hero-buttons .dsdr-btn { flex: 1; } .dsdr-generate { width: 100%; } .dsdr-range { grid-template-columns: 1fr 1fr; } .dsdr-range .dsdr-actions { grid-column: 1 / -1; } .dsdr-stats { grid-template-columns: 1fr 1fr; } .dsdr-scan-row { grid-template-columns: 1fr; } .dsdr-manual-add { grid-template-columns: 1fr; } .dsdr-source, .dsdr-source-docs { grid-template-columns: 1fr; } .dsdr-source .dsdr-icon-btn { justify-self: end; } }",
+      "@media (max-width: 780px) { .dsdr-page { padding: 20px 16px 40px; } .dsdr-hero-action { flex: 1 0 100%; width: 100%; align-items: stretch; margin-left: 0; } .dsdr-hero-buttons { width: 100%; } .dsdr-hero-buttons .dsdr-btn { flex: 1; } .dsdr-split { flex: 1; } .dsdr-split .dsdr-generate { flex: 1; } .dsdr-generate { width: 100%; } .dsdr-range { grid-template-columns: 1fr 1fr; } .dsdr-range .dsdr-actions { grid-column: 1 / -1; } .dsdr-stats { grid-template-columns: 1fr 1fr; } .dsdr-scan-row { grid-template-columns: 1fr; } .dsdr-manual-add { grid-template-columns: 1fr; } .dsdr-source, .dsdr-source-docs { grid-template-columns: 1fr; } .dsdr-source .dsdr-icon-btn { justify-self: end; } }",
     ].join(NL);
 
     function installStyles(ctx) {
@@ -488,11 +528,73 @@ window.__ModuleLoader__.load({
       );
     }
 
+    function SaveIcon(props) {
+      const size = Number(props && props.size) > 0 ? Number(props.size) : 15;
+      return h(
+        "svg",
+        {
+          viewBox: "0 0 24 24",
+          width: size,
+          height: size,
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: 1.8,
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          "aria-hidden": true,
+        },
+        h("path", { d: "M5 3.5h11l3.5 3.5v13.5H5z" }),
+        h("path", { d: "M8 3.5v5h7v-5M8 20.5v-6h8v6" }),
+      );
+    }
+
+    function GenerateIcon(props) {
+      const size = Number(props && props.size) > 0 ? Number(props.size) : 15;
+      return h(
+        "svg",
+        {
+          viewBox: "0 0 24 24",
+          width: size,
+          height: size,
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: 1.8,
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          "aria-hidden": true,
+        },
+        h("path", { d: "M6 3.5h8l4 4v13H6z" }),
+        h("path", { d: "M14 3.5v4h4M9 12h6M9 15.5h4" }),
+        h("path", { d: "M18.5 16.5v4M16.5 18.5h4" }),
+      );
+    }
+
+    function ChevronIcon(props) {
+      const size = Number(props && props.size) > 0 ? Number(props.size) : 12;
+      return h(
+        "svg",
+        {
+          viewBox: "0 0 24 24",
+          width: size,
+          height: size,
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: 2,
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          "aria-hidden": true,
+        },
+        h("path", { d: "M6 9l6 6 6-6" }),
+      );
+    }
+
     function DailyReportView(props) {
       const ctx = props.ctx;
       const t = useTranslate(ctx);
       const [settings, setSettings] = React.useState({ git: [], docs: [] });
       const [range, setRange] = React.useState(currentMonthRange);
+      const [exportFormat, setExportFormat] = React.useState("xlsx");
+      const [formatMenuOpen, setFormatMenuOpen] = React.useState(false);
       const [aiInfo, setAiInfo] = React.useState({ available: false, provider: "", model: "" });
       const [useAi, setUseAi] = React.useState(true);
       const [loading, setLoading] = React.useState(true);
@@ -519,6 +621,7 @@ window.__ModuleLoader__.load({
       const pollAbortRef = React.useRef(null);
       const saveAbortRef = React.useRef(null);
       const saveTimerRef = React.useRef(null);
+      const formatMenuRef = React.useRef(null);
       const sessionId = typeof props.sessionId === "string" ? props.sessionId : "";
       const localeIsEnglish = currentLocaleId(ctx).toLowerCase().startsWith("en");
 
@@ -536,6 +639,17 @@ window.__ModuleLoader__.load({
       }, []);
 
       React.useEffect(() => {
+        if (!formatMenuOpen) return;
+        const close = (event) => {
+          if (formatMenuRef.current && !formatMenuRef.current.contains(event.target)) {
+            setFormatMenuOpen(false);
+          }
+        };
+        document.addEventListener("mousedown", close);
+        return () => document.removeEventListener("mousedown", close);
+      }, [formatMenuOpen]);
+
+      React.useEffect(() => {
         let alive = true;
         const query = sessionId.length > 0 ? "?sessionId=" + encodeURIComponent(sessionId) : "";
         fetch(API + "/state" + query, { headers: { accept: "application/json" } })
@@ -547,6 +661,10 @@ window.__ModuleLoader__.load({
             if (!alive) return;
             setSettings(normalizeClientSettings(payload && payload.settings));
             setUseAi(!(payload && payload.settings && payload.settings.aiEnabled === false));
+            const savedFormat = payload && payload.settings && payload.settings.format;
+            if (typeof savedFormat === "string" && FORMAT_OPTIONS.includes(savedFormat)) {
+              setExportFormat(savedFormat);
+            }
             const nextAi = payload && payload.ai ? payload.ai : { available: false, provider: "", model: "" };
             setAiInfo({
               available: nextAi.available === true,
@@ -590,7 +708,7 @@ window.__ModuleLoader__.load({
             saveTimerRef.current = null;
           }
         };
-      }, [settings, useAi, range, loading]);
+      }, [settings, useAi, range, exportFormat, loading]);
 
       function updateGit(index, patch) {
         setSettings((previous) => ({
@@ -637,7 +755,7 @@ window.__ModuleLoader__.load({
           const response = await fetch(API + "/state", {
             method: "PUT",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ settings: cleanSettings(settings, useAi, range) }),
+            body: JSON.stringify({ settings: cleanSettings(settings, useAi, range, exportFormat) }),
             signal: controller.signal,
           });
           if (!response.ok) throw new Error("save-failed");
@@ -821,7 +939,7 @@ window.__ModuleLoader__.load({
           const response = await fetch(API + "/job/export", {
             method: "POST",
             headers: { "content-type": "application/json", accept: "application/octet-stream" },
-            body: JSON.stringify({ jobId: previewJobId, edits: previewEdits() }),
+            body: JSON.stringify({ jobId: previewJobId, edits: previewEdits(), format: exportFormat }),
           });
           if (!response.ok) {
             let payload = null;
@@ -837,7 +955,7 @@ window.__ModuleLoader__.load({
           const filenameHeader = response.headers.get("x-report-filename");
           const filename = filenameHeader
             ? decodeURIComponent(filenameHeader)
-            : "日报汇总_" + preview.range.start + "_" + preview.range.end + ".xlsx";
+            : "日报汇总_" + preview.range.start + "_" + preview.range.end + "." + formatExtension(exportFormat);
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
           const next = Object.assign({}, summary, { filename, url, size: blob.size });
@@ -919,9 +1037,12 @@ window.__ModuleLoader__.load({
         });
       }
 
-      async function generate() {
+      async function generate(formatOverride) {
         if (generating) return;
-        const cleaned = cleanSettings(settings, useAi, range);
+        const format = FORMAT_OPTIONS.includes(formatOverride) ? formatOverride : exportFormat;
+        setExportFormat(format);
+        setFormatMenuOpen(false);
+        const cleaned = cleanSettings(settings, useAi, range, format);
         if (cleaned.git.length === 0 && cleaned.docs.length === 0) {
           setError(t("error.noSources", "请至少添加一个 Git 仓库或本地文档。"));
           return;
@@ -1080,16 +1201,66 @@ window.__ModuleLoader__.load({
                   "button",
                   {
                     type: "button",
-                    className: "dsdr-btn dsdr-save-btn",
+                    className: "dsdr-btn dsdr-save-btn dsdr-btn-with-icon",
                     onClick: saveSettingsNow,
                     disabled: saveState === "saving",
                   },
-                  saveState === "saving" ? t("save.savingShort", "正在保存…") : t("save.button", "保存设置"),
+                  h(SaveIcon, { size: 15 }),
+                  h("span", null, saveState === "saving" ? t("save.savingShort", "正在保存…") : t("save.button", "保存设置")),
                 ),
                 h(
-                  "button",
-                  { type: "button", className: "dsdr-btn dsdr-btn-primary dsdr-generate", onClick: generate, disabled: generating },
-                  generating ? t("generating", "正在收集并生成…") : t("generate", "生成 XLSX 日报"),
+                  "div",
+                  { className: "dsdr-split", ref: formatMenuRef },
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      className: "dsdr-btn dsdr-btn-primary dsdr-generate dsdr-btn-with-icon",
+                      onClick: () => generate(),
+                      disabled: generating,
+                    },
+                    h(GenerateIcon, { size: 15 }),
+                    h("span", null, generating ? t("generating", "正在收集并生成…") : t("generate", "生成日报")),
+                  ),
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      className: "dsdr-btn dsdr-btn-primary dsdr-split-toggle",
+                      onClick: () => setFormatMenuOpen((open) => !open),
+                      disabled: generating,
+                      "aria-haspopup": "menu",
+                      "aria-expanded": formatMenuOpen,
+                      "aria-label": t("format.label", "格式"),
+                    },
+                    h(ChevronIcon, { size: 12 }),
+                  ),
+                  formatMenuOpen
+                    ? h(
+                        "div",
+                        { className: "dsdr-menu", role: "menu" },
+                        h("div", { className: "dsdr-menu-title" }, t("format.label", "格式")),
+                        FORMAT_OPTIONS.map((format) =>
+                          h(
+                            "button",
+                            {
+                              type: "button",
+                              role: "menuitemradio",
+                              "aria-checked": exportFormat === format,
+                              className: "dsdr-menu-item" + (exportFormat === format ? " is-active" : ""),
+                              key: format,
+                              onClick: () => {
+                                setExportFormat(format);
+                                setFormatMenuOpen(false);
+                                generate(format);
+                              },
+                            },
+                            h("span", null, formatLabel(format, t)),
+                            h("span", { className: "dsdr-menu-check" }, exportFormat === format ? "✓" : ""),
+                          ),
+                        ),
+                      )
+                    : null,
                 ),
               ),
               saveText ? h("div", { className: "dsdr-save" }, saveText) : null,
@@ -1150,7 +1321,7 @@ window.__ModuleLoader__.load({
                     h(
                       "button",
                       { type: "button", className: "dsdr-btn dsdr-btn-primary", onClick: exportPreview, disabled: exporting || regenerating.length > 0 },
-                      exporting ? t("preview.exporting", "正在导出…") : t("preview.export", "导出 XLSX"),
+                      exporting ? t("preview.exporting", "正在导出…") : t("preview.export", "导出") + " " + formatShortLabel(exportFormat),
                     ),
                   ),
                 ),
