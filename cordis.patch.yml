@@ -1,0 +1,3 @@
+- insert:
+    - id: daily-report
+      name: 'dsh-plugin-daily-report'

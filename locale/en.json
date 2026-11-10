@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Daily report",
+    "description": "Aggregate Git repositories, branches and local notes by day, optionally summarize them with AI, then export an XLSX report."
+  }
+}

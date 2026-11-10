@@ -1,0 +1,3 @@
+# Local npm publish credentials and packed artifacts
+.npmrc
+*.tgz

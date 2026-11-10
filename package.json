@@ -1,0 +1,50 @@
+{
+  "name": "dsh-plugin-daily-report",
+  "version": "1.0.0",
+  "description": "按天汇总多个 Git 仓库、分支与本地文档，支持 AI 分析并导出 XLSX 日报。",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "lib/*.js",
+    "locale/*.json",
+    "icon.svg",
+    "README.md"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "engines": {
+    "dsh": ">=0.2.2-rc.1"
+  },
+  "keywords": [
+    "dsh",
+    "daily-report",
+    "git",
+    "xlsx",
+    "ai"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  }
+}
