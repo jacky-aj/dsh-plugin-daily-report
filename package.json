@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-daily-report",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "月底不知道干了哪些活？自动汇总多个 Git 仓库、分支与本地文档，AI 分析并导出 XLSX/Markdown/CSV/HTML 日报。",
   "license": "MIT",
   "type": "module",
@@ -36,7 +36,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://gitee.com/yuanjiegit/dsh-plugin-daily-report.git"
+    "url": "https://gitee.com/yuanjiegit/dsh-plugin-daily-report"
   },
   "homepage": "https://gitee.com/yuanjiegit/dsh-plugin-daily-report#readme",
   "bugs": {
