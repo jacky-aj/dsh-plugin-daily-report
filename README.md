@@ -11,6 +11,12 @@
   <img alt="DSH" src="https://img.shields.io/badge/DSH-%3E%3D0.2.2--rc.1-146b5a">
 </p>
 
+<p align="center">
+  <a href="https://gitee.com/yuanjiegit/dsh-plugin-daily-report">Gitee 仓库</a>
+  ·
+  <a href="https://gitee.com/yuanjiegit/dsh-plugin-daily-report/issues">问题反馈</a>
+</p>
+
 ---
 
 ## 解决你的需求
