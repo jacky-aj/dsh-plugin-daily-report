@@ -220,6 +220,14 @@ assert.equal(testedPayload.sources.length, 2);
 const cancelled = await request("/daily-report/job/cancel", "POST", { jobId: startPayload.jobId });
 assert.equal(cancelled.status, 200);
 
+const scheduleStatus = await request("/daily-report/schedule/status", "GET");
+assert.equal(scheduleStatus.status, 200);
+const scheduleRun = await request("/daily-report/schedule/run", "POST", {});
+assert.equal(scheduleRun.status, 200);
+const scheduleRunPayload = JSON.parse(scheduleRun.body.toString("utf8"));
+assert.equal(scheduleRunPayload.ok, true);
+assert.ok(scheduleRunPayload.filename);
+
 const toolResult = await tools[0].execute(
   { start: "2026-11-01", end: "2026-11-30", git: [{ location: repo, branch: "main" }], docs: [notes] },
   { agent: { id: "test" }, signal: new AbortController().signal },

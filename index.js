@@ -8,13 +8,14 @@
 import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 
 import {
   collectReport,
   defaultMonthRange,
   discoverGitRepositories,
   formatLocalDate,
+  formatLocalDateTime,
   parseIsoDate,
   sanitizeSettings,
 } from "./lib/collect.js";
@@ -35,6 +36,9 @@ const ROUTE_JOB_REGENERATE = "/daily-report/job/regenerate-day";
 const ROUTE_JOB_CANCEL = "/daily-report/job/cancel";
 const ROUTE_SCAN = "/daily-report/scan";
 const ROUTE_TEST = "/daily-report/test-sources";
+const ROUTE_SCHEDULE_STATUS = "/daily-report/schedule/status";
+const ROUTE_SCHEDULE_FILE = "/daily-report/schedule/file";
+const ROUTE_SCHEDULE_RUN = "/daily-report/schedule/run";
 const MAX_BODY = 2 * 1024 * 1024;
 const MAX_RANGE_DAYS = 366;
 const JOB_TTL = 60 * 60 * 1000;
@@ -271,9 +275,22 @@ async function readScheduleState() {
     return {
       lastDaily: typeof parsed.lastDaily === "string" ? parsed.lastDaily : "",
       lastWeekly: typeof parsed.lastWeekly === "string" ? parsed.lastWeekly : "",
+      lastAt: typeof parsed.lastAt === "string" ? parsed.lastAt : "",
+      lastStatus: parsed.lastStatus === "error" ? "error" : parsed.lastStatus === "ok" ? "ok" : "",
+      lastFile: typeof parsed.lastFile === "string" ? parsed.lastFile : "",
+      lastError: typeof parsed.lastError === "string" ? parsed.lastError : "",
+      lastRange: parsed.lastRange && typeof parsed.lastRange === "object" ? parsed.lastRange : null,
     };
   } catch {
-    return { lastDaily: "", lastWeekly: "" };
+    return {
+      lastDaily: "",
+      lastWeekly: "",
+      lastAt: "",
+      lastStatus: "",
+      lastFile: "",
+      lastError: "",
+      lastRange: null,
+    };
   }
 }
 
@@ -304,6 +321,26 @@ function scheduledRange(frequency, now) {
 
 let scheduleRunning = false;
 
+async function runScheduledReport(ctx, settings, range, now) {
+  const generated = await generateFromRequest(
+    ctx,
+    { settings, start: range.start, end: range.end, ai: settings.aiEnabled === true, locale: "zh" },
+    undefined,
+  );
+  const buffer = buildReportBuffer(generated.result, settings.format);
+  const directory = join(homeDirectory(), "daily-report", "history");
+  await fs.mkdir(directory, { recursive: true });
+  const filename = reportFileName(range.start, range.end, settings.format);
+  await fs.writeFile(join(directory, filename), buffer);
+  return {
+    filename,
+    filePath: join(directory, filename),
+    size: buffer.length,
+    range,
+    at: formatLocalDateTime(now),
+  };
+}
+
 async function checkSchedule(ctx) {
   if (scheduleRunning) return;
   const { settings } = await readSettings();
@@ -322,23 +359,60 @@ async function checkSchedule(ctx) {
   scheduleRunning = true;
   const range = scheduledRange(settings.scheduleFrequency, now);
   try {
-    const generated = await generateFromRequest(
-      ctx,
-      { settings, start: range.start, end: range.end, ai: settings.aiEnabled === true, locale: "zh" },
-      undefined,
-    );
-    const buffer = buildReportBuffer(generated.result, settings.format);
-    const directory = join(homeDirectory(), "daily-report", "history");
-    await fs.mkdir(directory, { recursive: true });
-    await fs.writeFile(join(directory, reportFileName(range.start, range.end, settings.format)), buffer);
-  } catch {
-    // Mark the attempt so a persistent failure does not retry every minute.
+    const result = await runScheduledReport(ctx, settings, range, now);
+    state.lastStatus = "ok";
+    state.lastFile = result.filename;
+    state.lastError = "";
+    state.lastRange = range;
+  } catch (error) {
+    state.lastStatus = "error";
+    state.lastFile = "";
+    state.lastError = (error && error.message) || "自动生成失败";
+    state.lastRange = range;
   } finally {
+    state.lastAt = formatLocalDateTime(now);
     state.lastDaily = dateKey;
     if (settings.scheduleFrequency === "weekly") state.lastWeekly = weekKey;
     await writeScheduleState(state).catch(() => {});
     scheduleRunning = false;
   }
+}
+
+async function readScheduleHistory() {
+  const directory = join(homeDirectory(), "daily-report", "history");
+  try {
+    const entries = await fs.readdir(directory, { withFileTypes: true });
+    const files = [];
+    for (const entry of entries) {
+      if (!entry.isFile() || !/\.(xlsx|md|csv|html)$/i.test(entry.name)) continue;
+      const stat = await fs.stat(join(directory, entry.name));
+      files.push({ name: entry.name, size: stat.size, mtime: stat.mtime.toISOString() });
+    }
+    return files.sort((left, right) => right.mtime.localeCompare(left.mtime)).slice(0, 30);
+  } catch {
+    return [];
+  }
+}
+
+async function scheduleStatus() {
+  const { settings } = await readSettings();
+  const state = await readScheduleState();
+  const history = await readScheduleHistory();
+  if (!state.lastAt && history.length > 0) {
+    const latest = history[0];
+    state.lastAt = formatLocalDateTime(new Date(latest.mtime));
+    state.lastFile = latest.name;
+    state.lastStatus = "ok";
+  }
+  return {
+    enabled: settings.scheduleEnabled,
+    frequency: settings.scheduleFrequency,
+    time: settings.scheduleTime,
+    running: scheduleRunning,
+    directory: join(homeDirectory(), "daily-report", "history"),
+    state,
+    history,
+  };
 }
 
 function startScheduler(ctx) {
@@ -687,7 +761,18 @@ export function apply(ctx) {
         }
         const settings = sanitizeSettings(body && body.settings ? body.settings : body);
         try {
+          const previous = await readSettings();
           await writeSettings(settings);
+          const scheduleChanged =
+            previous.settings.scheduleTime !== settings.scheduleTime ||
+            previous.settings.scheduleFrequency !== settings.scheduleFrequency ||
+            (!previous.settings.scheduleEnabled && settings.scheduleEnabled);
+          if (scheduleChanged) {
+            const state = await readScheduleState();
+            state.lastDaily = "";
+            state.lastWeekly = "";
+            await writeScheduleState(state).catch(() => {});
+          }
           return sendJson(res, 200, { ok: true, settings });
         } catch (error) {
           return sendError(res, 500, "save-failed", "保存设置失败：" + (error.message || "未知错误"));
@@ -987,6 +1072,100 @@ export function apply(ctx) {
       return sendJson(res, 200, { ok: true, status: job.status });
     },
     "daily-report: job cancel route",
+  );
+
+  registerRoute(
+    ctx,
+    ROUTE_SCHEDULE_STATUS,
+    async (req, res) => {
+      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
+      if (req.method !== "GET") {
+        res.setHeader("allow", "GET");
+        return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
+      }
+      return sendJson(res, 200, await scheduleStatus());
+    },
+    "daily-report: schedule status route",
+  );
+
+  registerRoute(
+    ctx,
+    ROUTE_SCHEDULE_FILE,
+    async (req, res) => {
+      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
+      if (req.method !== "GET") {
+        res.setHeader("allow", "GET");
+        return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
+      }
+      const url = new URL(req.url || "/", "http://127.0.0.1");
+      const name = url.searchParams.get("name") || "";
+      if (name.length === 0 || basename(name) !== name || !/\.(xlsx|md|csv|html)$/i.test(name)) {
+        return sendError(res, 400, "invalid-file", "文件名无效。");
+      }
+      const file = join(homeDirectory(), "daily-report", "history", name);
+      try {
+        const data = await fs.readFile(file);
+        const extension = name.slice(name.lastIndexOf(".") + 1).toLowerCase();
+        const contentType =
+          extension === "md"
+            ? "text/markdown; charset=utf-8"
+            : extension === "csv"
+              ? "text/csv; charset=utf-8"
+              : extension === "html"
+                ? "text/html; charset=utf-8"
+                : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        res.statusCode = 200;
+        res.setHeader("content-type", contentType);
+        res.setHeader("content-disposition", 'attachment; filename="' + encodeURIComponent(name) + '"');
+        res.setHeader("content-length", String(data.length));
+        res.end(data);
+      } catch {
+        return sendError(res, 404, "history-not-found", "历史文件不存在。");
+      }
+    },
+    "daily-report: schedule history file route",
+  );
+
+  registerRoute(
+    ctx,
+    ROUTE_SCHEDULE_RUN,
+    async (req, res) => {
+      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
+      if (req.method !== "POST") {
+        res.setHeader("allow", "POST");
+        return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
+      }
+      if (scheduleRunning) return sendError(res, 409, "schedule-running", "已有自动生成任务正在执行。");
+      const { settings } = await readSettings();
+      if (settings.git.length === 0 && settings.docs.length === 0) {
+        return sendError(res, 400, "no-sources", "请至少添加一个 Git 仓库或本地文档。");
+      }
+      const now = new Date();
+      const range = scheduledRange(settings.scheduleFrequency, now);
+      const state = await readScheduleState();
+      scheduleRunning = true;
+      try {
+        const result = await runScheduledReport(ctx, settings, range, now);
+        state.lastStatus = "ok";
+        state.lastFile = result.filename;
+        state.lastError = "";
+        state.lastRange = range;
+        state.lastAt = formatLocalDateTime(now);
+        await writeScheduleState(state);
+        return sendJson(res, 200, { ok: true, ...result, status: await scheduleStatus() });
+      } catch (error) {
+        state.lastStatus = "error";
+        state.lastFile = "";
+        state.lastError = (error && error.message) || "自动生成失败";
+        state.lastRange = range;
+        state.lastAt = formatLocalDateTime(now);
+        await writeScheduleState(state).catch(() => {});
+        return sendJson(res, 200, { ok: false, error: state.lastError, status: await scheduleStatus() });
+      } finally {
+        scheduleRunning = false;
+      }
+    },
+    "daily-report: schedule run route",
   );
 
   registerTool(ctx);

@@ -74,13 +74,24 @@ window.__ModuleLoader__.load({
       "ai.template.manager": "管理汇报",
       "ai.modelSelect": "模型",
       "ai.defaultModel": "默认模型",
-      "schedule.title": "自动生成",
+      "schedule.title": "定时自动生成",
+      "schedule.frequency": "频率",
       "schedule.desc": "在 DSH 运行期间按设定时间自动生成报告，并保存到本地历史目录。",
       "schedule.enable": "启用自动生成",
       "schedule.daily": "每天",
       "schedule.weekly": "每周一",
       "schedule.time": "生成时间",
       "schedule.hint": "自动生成使用当前保存的数据源、AI 设置和格式。",
+      "schedule.runNow": "立即运行一次",
+      "schedule.running": "正在生成…",
+      "schedule.inProgress": "自动生成进行中…",
+      "schedule.last": "上次生成：",
+      "schedule.none": "尚未生成",
+      "schedule.history": "历史文件",
+      "schedule.directory": "历史目录：",
+      "schedule.noHistory": "暂无历史文件",
+      "schedule.runFailed": "自动生成失败",
+      "schedule.refresh": "刷新状态",
       "datasource.title": "数据源配置",
       "datasource.desc": "统一管理 Git 仓库与本地文档，生成时合并到同一份日报。",
       "datasource.git": "Git 仓库",
@@ -103,6 +114,10 @@ window.__ModuleLoader__.load({
       "save.button": "保存设置",
       "save.saved": "设置已保存",
       "save.failed": "设置保存失败",
+      "settings.menu": "设置操作",
+      "settings.export": "导出设置",
+      "settings.import": "导入设置",
+      "settings.importFailed": "导入设置失败：",
       "result.title": "生成结果",
       "result.download": "下载 XLSX",
       "result.stats.commits": "Git 提交",
@@ -216,12 +231,23 @@ window.__ModuleLoader__.load({
       "ai.modelSelect": "Model",
       "ai.defaultModel": "Default model",
       "schedule.title": "Scheduled generation",
+      "schedule.frequency": "Frequency",
       "schedule.desc": "While DSH is running, generate a report at the configured time and save it to the local history folder.",
       "schedule.enable": "Enable scheduled generation",
       "schedule.daily": "Daily",
       "schedule.weekly": "Every Monday",
       "schedule.time": "Time",
       "schedule.hint": "Scheduled runs use the saved sources, AI settings and format.",
+      "schedule.runNow": "Run once now",
+      "schedule.running": "Generating…",
+      "schedule.inProgress": "Scheduled generation in progress…",
+      "schedule.last": "Last run: ",
+      "schedule.none": "Not generated yet",
+      "schedule.history": "History",
+      "schedule.directory": "History folder: ",
+      "schedule.noHistory": "No history files yet",
+      "schedule.runFailed": "Scheduled generation failed",
+      "schedule.refresh": "Refresh status",
       "datasource.title": "Data sources",
       "datasource.desc": "Manage Git repositories and local documents together; both feed the same report.",
       "datasource.git": "Git repositories",
@@ -244,6 +270,10 @@ window.__ModuleLoader__.load({
       "save.button": "Save settings",
       "save.saved": "Settings saved",
       "save.failed": "Could not save settings",
+      "settings.menu": "Settings actions",
+      "settings.export": "Export settings",
+      "settings.import": "Import settings",
+      "settings.importFailed": "Could not import settings: ",
       "result.title": "Result",
       "result.download": "Download XLSX",
       "result.stats.commits": "Git commits",
@@ -483,12 +513,16 @@ window.__ModuleLoader__.load({
       ".dsdr-btn-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }",
       ".dsdr-split { position: relative; display: inline-flex; align-items: stretch; }",
       ".dsdr-split .dsdr-generate { border-radius: 8px 0 0 8px; }",
+      ".dsdr-save-split .dsdr-save-btn:first-child { border-radius: 8px 0 0 8px; }",
+      ".dsdr-save-split .dsdr-split-toggle { border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255, 255, 255, .25); background: #3b4046; border-color: #3b4046; }",
+      ".dsdr-save-split .dsdr-split-toggle:hover { background: #292d31; border-color: #292d31; }",
       ".dsdr-split-toggle { min-height: 38px; padding: 0 9px; border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255, 255, 255, .32); }",
       ".dsdr-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; min-width: 190px; padding: 5px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 10px; background: var(--dsw-alias-bg-overlay); box-shadow: 0 10px 28px rgba(0, 0, 0, .2); }",
       ".dsdr-menu-title { padding: 5px 8px 4px; color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }",
       ".dsdr-menu-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 7px 8px; border: 0; border-radius: 7px; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; line-height: 18px; text-align: left; cursor: pointer; }",
       ".dsdr-menu-item:hover { background: var(--dsw-alias-bg-layer-2); }",
       ".dsdr-menu-item.is-active { background: var(--dsw-alias-bg-layer-2); font-weight: 600; }",
+      ".dsdr-menu-item-start { justify-content: flex-start; gap: 9px; }",
       ".dsdr-menu-check { width: 14px; color: #146b5a; text-align: center; }",
       ".dsdr-save { color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }",
       ".dsdr-mark { flex: none; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; background: var(--dsw-alias-bg-layer-2); border: 1px solid var(--dsw-alias-border-l1); }",
@@ -526,6 +560,15 @@ window.__ModuleLoader__.load({
       ".dsdr-check input { width: 15px; height: 15px; margin: 0; accent-color: #15557f; cursor: pointer; }",
       ".dsdr-check.is-disabled { color: var(--dsw-alias-label-secondary); cursor: not-allowed; opacity: .7; }",
       ".dsdr-check.is-disabled input { cursor: not-allowed; }",
+      ".dsdr-switch { position: relative; display: inline-flex; align-items: center; cursor: pointer; }",
+      ".dsdr-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }",
+      ".dsdr-switch-track { position: relative; width: 40px; height: 22px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 999px; background: var(--dsw-alias-bg-layer-2); transition: background .18s ease, border-color .18s ease; }",
+      ".dsdr-switch-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--dsw-alias-label-secondary); transition: transform .18s ease, background .18s ease; }",
+      ".dsdr-switch input:checked + .dsdr-switch-track { background: #146b5a; border-color: #146b5a; }",
+      ".dsdr-switch input:checked + .dsdr-switch-track .dsdr-switch-thumb { transform: translateX(18px); background: #ffffff; }",
+      ".dsdr-switch input:focus-visible + .dsdr-switch-track { outline: 2px solid #146b5a; outline-offset: 2px; }",
+      ".dsdr-switch.is-disabled { opacity: .55; cursor: not-allowed; }",
+      ".dsdr-switch.is-disabled input { cursor: not-allowed; }",
       ".dsdr-progress-card { display: flex; flex-direction: column; gap: 7px; }",
       ".dsdr-progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 12px; line-height: 18px; color: var(--dsw-alias-label-primary); }",
       ".dsdr-progress-value { flex: none; color: var(--dsw-alias-label-secondary); font-variant-numeric: tabular-nums; }",
@@ -562,6 +605,11 @@ window.__ModuleLoader__.load({
       ".dsdr-tab-count { display: inline-flex; min-width: 17px; height: 17px; align-items: center; justify-content: center; padding: 0 5px; border-radius: 999px; background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-secondary); font-size: 10px; line-height: 17px; }",
       ".dsdr-filter-author { flex: 1 1 280px; min-width: 220px; }",
       ".dsdr-ai-options { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-top: 10px; }",
+      ".dsdr-schedule-status { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--dsw-alias-border-l1); }",
+      ".dsdr-schedule-status-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 10px; }",
+      ".dsdr-history-list { display: flex; flex-wrap: wrap; gap: 4px 12px; }",
+      ".dsdr-history-link { color: #146b5a; font-size: 12px; line-height: 18px; text-decoration: none; }",
+      ".dsdr-history-link:hover { text-decoration: underline; }",
       ".dsdr-test-results { display: flex; flex-direction: column; gap: 5px; margin: 0 0 10px; padding: 8px 10px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; background: var(--dsw-alias-bg-layer-2); }",
       ".dsdr-scan { display: flex; flex-direction: column; gap: 7px; margin: 0 0 12px; padding: 12px; border: 1px dashed var(--dsw-alias-border-l2); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }",
       ".dsdr-scan-title { font-size: 13px; line-height: 20px; font-weight: 600; }",
@@ -706,6 +754,123 @@ window.__ModuleLoader__.load({
       }, "i");
     }
 
+    function RefreshIcon(props) {
+      const size = Number(props && props.size) > 0 ? Number(props.size) : 14;
+      return h(
+        "svg",
+        {
+          viewBox: "0 0 24 24",
+          width: size,
+          height: size,
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: 1.9,
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          "aria-hidden": true,
+        },
+        h("path", { d: "M20 11a8 8 0 1 0-2.3 5.7" }),
+        h("path", { d: "M20 4v7h-7" }),
+      );
+    }
+
+    function PlayIcon(props) {
+      const size = Number(props && props.size) > 0 ? Number(props.size) : 14;
+      return h(
+        "svg",
+        {
+          viewBox: "0 0 24 24",
+          width: size,
+          height: size,
+          fill: "currentColor",
+          "aria-hidden": true,
+        },
+        h("path", { d: "M8 5.5v13l10-6.5z" }),
+      );
+    }
+
+    function TestIcon(props) {
+      const size = Number(props && props.size) > 0 ? Number(props.size) : 14;
+      return h(
+        "svg",
+        {
+          viewBox: "0 0 24 24",
+          width: size,
+          height: size,
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: 1.8,
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          "aria-hidden": true,
+        },
+        h("circle", { cx: 12, cy: 12, r: 9 }),
+        h("path", { d: "M7.5 12.5l3 3 6-6.5" }),
+      );
+    }
+
+    function ScanIcon(props) {
+      const size = Number(props && props.size) > 0 ? Number(props.size) : 14;
+      return h(
+        "svg",
+        {
+          viewBox: "0 0 24 24",
+          width: size,
+          height: size,
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: 1.8,
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          "aria-hidden": true,
+        },
+        h("path", { d: "M3.5 7.5h6l2 2h9v9.5h-17z" }),
+        h("path", { d: "M3.5 7.5V5h5l2 2" }),
+        h("circle", { cx: 15, cy: 14.5, r: 2.2 }),
+        h("path", { d: "M16.6 16.1l2 2" }),
+      );
+    }
+
+    function DownloadIcon(props) {
+      const size = Number(props && props.size) > 0 ? Number(props.size) : 14;
+      return h(
+        "svg",
+        {
+          viewBox: "0 0 24 24",
+          width: size,
+          height: size,
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: 1.8,
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          "aria-hidden": true,
+        },
+        h("path", { d: "M12 3.5v11M7.5 10.5l4.5 4.5 4.5-4.5" }),
+        h("path", { d: "M4.5 17.5v2h15v-2" }),
+      );
+    }
+
+    function UploadIcon(props) {
+      const size = Number(props && props.size) > 0 ? Number(props.size) : 14;
+      return h(
+        "svg",
+        {
+          viewBox: "0 0 24 24",
+          width: size,
+          height: size,
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: 1.8,
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          "aria-hidden": true,
+        },
+        h("path", { d: "M12 15.5v-11M7.5 8.5L12 4l4.5 4.5" }),
+        h("path", { d: "M4.5 17.5v2h15v-2" }),
+      );
+    }
+
     function DailyReportView(props) {
       const ctx = props.ctx;
       const t = useTranslate(ctx);
@@ -738,12 +903,18 @@ window.__ModuleLoader__.load({
       const [testResults, setTestResults] = React.useState(null);
       const [testError, setTestError] = React.useState("");
       const [dataSourceTab, setDataSourceTab] = React.useState("git");
+      const [scheduleStatus, setScheduleStatus] = React.useState(null);
+      const [scheduleLoading, setScheduleLoading] = React.useState(false);
+      const [scheduleError, setScheduleError] = React.useState("");
+      const [settingsMenuOpen, setSettingsMenuOpen] = React.useState(false);
       const firstSave = React.useRef(true);
       const resultRef = React.useRef(null);
       const pollAbortRef = React.useRef(null);
       const saveAbortRef = React.useRef(null);
       const saveTimerRef = React.useRef(null);
       const formatMenuRef = React.useRef(null);
+      const settingsMenuRef = React.useRef(null);
+      const settingsFileRef = React.useRef(null);
       const jobIdRef = React.useRef("");
       const sessionId = typeof props.sessionId === "string" ? props.sessionId : "";
       const localeIsEnglish = currentLocaleId(ctx).toLowerCase().startsWith("en");
@@ -771,6 +942,26 @@ window.__ModuleLoader__.load({
         document.addEventListener("mousedown", close);
         return () => document.removeEventListener("mousedown", close);
       }, [formatMenuOpen]);
+
+      React.useEffect(() => {
+        if (!settingsMenuOpen) return;
+        const close = (event) => {
+          if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target)) {
+            setSettingsMenuOpen(false);
+          }
+        };
+        document.addEventListener("mousedown", close);
+        return () => document.removeEventListener("mousedown", close);
+      }, [settingsMenuOpen]);
+
+      React.useEffect(() => {
+        void loadScheduleStatus();
+        if (!settings.scheduleEnabled) return undefined;
+        const timer = window.setInterval(() => {
+          void loadScheduleStatus();
+        }, 30000);
+        return () => window.clearInterval(timer);
+      }, [settings.scheduleEnabled]);
 
       React.useEffect(() => {
         let alive = true;
@@ -870,7 +1061,7 @@ window.__ModuleLoader__.load({
         setSettings((previous) => ({ ...previous, docs: previous.docs.filter((_, itemIndex) => itemIndex !== index) }));
       }
 
-      async function persistSettings() {
+      async function persistSettingsValue(cleaned) {
         if (saveAbortRef.current) saveAbortRef.current.abort();
         const controller = new AbortController();
         saveAbortRef.current = controller;
@@ -879,7 +1070,7 @@ window.__ModuleLoader__.load({
           const response = await fetch(API + "/state", {
             method: "PUT",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ settings: cleanSettings(settings, useAi, range, exportFormat) }),
+            body: JSON.stringify({ settings: cleaned }),
             signal: controller.signal,
           });
           if (!response.ok) throw new Error("save-failed");
@@ -892,12 +1083,63 @@ window.__ModuleLoader__.load({
         }
       }
 
+      async function persistSettings() {
+        await persistSettingsValue(cleanSettings(settings, useAi, range, exportFormat));
+      }
+
       function saveSettingsNow() {
         if (saveTimerRef.current) {
           window.clearTimeout(saveTimerRef.current);
           saveTimerRef.current = null;
         }
         persistSettings();
+      }
+
+      function exportSettings() {
+        const payload = {
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          settings: cleanSettings(settings, useAi, range, exportFormat),
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+        const url = window.URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = "daily-report-settings.json";
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+        setSettingsMenuOpen(false);
+      }
+
+      async function importSettingsFile(event) {
+        const file = event.target.files && event.target.files[0];
+        event.target.value = "";
+        if (!file) return;
+        setSettingsMenuOpen(false);
+        try {
+          const parsed = JSON.parse(await file.text());
+          const source = parsed && typeof parsed === "object" && parsed.settings && typeof parsed.settings === "object" ? parsed.settings : parsed;
+          if (!source || typeof source !== "object" || Array.isArray(source)) {
+            throw new Error("JSON 中没有有效的 settings 对象");
+          }
+          const imported = normalizeClientSettings(source);
+          const nextAi = source.aiEnabled !== false;
+          const nextRange =
+            source.range && typeof source.range.start === "string" && typeof source.range.end === "string" && source.range.start <= source.range.end
+              ? { start: source.range.start, end: source.range.end }
+              : currentMonthRange();
+          const nextFormat = FORMAT_OPTIONS.includes(source.format) ? source.format : "xlsx";
+          setSettings(imported);
+          setUseAi(nextAi);
+          setRange(nextRange);
+          setExportFormat(nextFormat);
+          setError("");
+          await persistSettingsValue(cleanSettings(imported, nextAi, nextRange, nextFormat));
+        } catch (err) {
+          setError(t("settings.importFailed", "导入设置失败：") + (err && err.message ? err.message : "未知错误"));
+        }
       }
 
       async function testSources() {
@@ -926,6 +1168,45 @@ window.__ModuleLoader__.load({
           setTestError(err && err.message ? err.message : t("test.failed", "测试数据源失败"));
         } finally {
           setTestingSources(false);
+        }
+      }
+
+      async function loadScheduleStatus() {
+        try {
+          const response = await fetch(API + "/schedule/status", { headers: { accept: "application/json" } });
+          if (!response.ok) return;
+          setScheduleStatus(await response.json());
+        } catch {
+          // Status is auxiliary; do not interrupt the main page.
+        }
+      }
+
+      async function runScheduleNow() {
+        if (scheduleLoading) return;
+        setScheduleLoading(true);
+        setScheduleError("");
+        try {
+          const response = await fetch(API + "/schedule/run", {
+            method: "POST",
+            headers: { "content-type": "application/json", accept: "application/json" },
+            body: JSON.stringify({ sessionId }),
+          });
+          let payload = null;
+          try {
+            payload = await response.json();
+          } catch {
+            payload = null;
+          }
+          if (!response.ok) throw new Error(errorMessageFromPayload(payload));
+          if (payload && payload.status) setScheduleStatus(payload.status);
+          if (!payload || payload.ok !== true) {
+            throw new Error((payload && payload.error) || t("schedule.runFailed", "自动生成失败"));
+          }
+        } catch (err) {
+          setScheduleError(err && err.message ? err.message : t("schedule.runFailed", "自动生成失败"));
+          await loadScheduleStatus();
+        } finally {
+          setScheduleLoading(false);
         }
       }
 
@@ -1370,16 +1651,66 @@ window.__ModuleLoader__.load({
                 "div",
                 { className: "dsdr-hero-buttons" },
                 h(
-                  "button",
-                  {
-                    type: "button",
-                    className: "dsdr-btn dsdr-save-btn dsdr-btn-with-icon",
-                    onClick: saveSettingsNow,
-                    disabled: saveState === "saving",
-                  },
-                  h(SaveIcon, { size: 15 }),
-                  h("span", null, saveState === "saving" ? t("save.savingShort", "正在保存…") : t("save.button", "保存设置")),
+                  "div",
+                  { className: "dsdr-split dsdr-save-split", ref: settingsMenuRef },
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      className: "dsdr-btn dsdr-save-btn dsdr-btn-with-icon",
+                      onClick: saveSettingsNow,
+                      disabled: saveState === "saving",
+                    },
+                    h(SaveIcon, { size: 15 }),
+                    h("span", null, saveState === "saving" ? t("save.savingShort", "正在保存…") : t("save.button", "保存设置")),
+                  ),
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      className: "dsdr-btn dsdr-save-btn dsdr-split-toggle",
+                      onClick: () => setSettingsMenuOpen((open) => !open),
+                      disabled: saveState === "saving",
+                      "aria-haspopup": "menu",
+                      "aria-expanded": settingsMenuOpen,
+                      "aria-label": t("settings.menu", "设置操作"),
+                    },
+                    h(ChevronIcon, { size: 12 }),
+                  ),
+                  settingsMenuOpen
+                    ? h(
+                        "div",
+                        { className: "dsdr-menu", role: "menu" },
+                        h("div", { className: "dsdr-menu-title" }, t("settings.menu", "设置操作")),
+                        h(
+                          "button",
+                          { type: "button", role: "menuitem", className: "dsdr-menu-item dsdr-menu-item-start", onClick: exportSettings },
+                          h(DownloadIcon, { size: 14 }),
+                          h("span", null, t("settings.export", "导出设置")),
+                        ),
+                        h(
+                          "button",
+                          {
+                            type: "button",
+                            role: "menuitem",
+                            className: "dsdr-menu-item dsdr-menu-item-start",
+                            onClick: () => {
+                              if (settingsFileRef.current) settingsFileRef.current.click();
+                            },
+                          },
+                          h(UploadIcon, { size: 14 }),
+                          h("span", null, t("settings.import", "导入设置")),
+                        ),
+                      )
+                    : null,
                 ),
+                h("input", {
+                  ref: settingsFileRef,
+                  type: "file",
+                  accept: ".json,application/json",
+                  style: { display: "none" },
+                  onChange: importSettingsFile,
+                }),
                 h(
                   "div",
                   { className: "dsdr-split", ref: formatMenuRef },
@@ -1713,14 +2044,19 @@ window.__ModuleLoader__.load({
               ),
               h(
                 "label",
-                { className: "dsdr-check" + (aiInfo.available ? "" : " is-disabled") },
+                { className: "dsdr-switch" + (aiInfo.available ? "" : " is-disabled"), title: t("ai.enable", "启用 AI 分析") },
                 h("input", {
                   type: "checkbox",
+                  "aria-label": t("ai.enable", "启用 AI 分析"),
                   checked: useAi,
                   disabled: !aiInfo.available,
                   onChange: (event) => setUseAi(event.target.checked),
                 }),
-                h("span", null, t("ai.enable", "启用 AI 分析")),
+                h(
+                  "span",
+                  { className: "dsdr-switch-track", "aria-hidden": true },
+                  h("span", { className: "dsdr-switch-thumb" }),
+                ),
               ),
             ),
             h(
@@ -1801,19 +2137,24 @@ window.__ModuleLoader__.load({
                 h(
                   "div",
                   { className: "dsdr-title-with-info" },
-                  h("div", { className: "dsdr-card-title" }, t("schedule.title", "自动生成")),
+                  h("div", { className: "dsdr-card-title" }, t("schedule.title", "定时自动生成")),
                   h(InfoDot, { text: t("schedule.desc", "在 DSH 运行期间按设定时间自动生成报告，并保存到本地历史目录。") }),
                 ),
               ),
               h(
                 "label",
-                { className: "dsdr-check" },
+                { className: "dsdr-switch", title: t("schedule.enable", "启用自动生成") },
                 h("input", {
                   type: "checkbox",
+                  "aria-label": t("schedule.enable", "启用自动生成"),
                   checked: settings.scheduleEnabled === true,
                   onChange: (event) => setSettings((previous) => ({ ...previous, scheduleEnabled: event.target.checked })),
                 }),
-                h("span", null, t("schedule.enable", "启用自动生成")),
+                h(
+                  "span",
+                  { className: "dsdr-switch-track", "aria-hidden": true },
+                  h("span", { className: "dsdr-switch-thumb" }),
+                ),
               ),
             ),
             h(
@@ -1822,7 +2163,7 @@ window.__ModuleLoader__.load({
               h(
                 "div",
                 { className: "dsdr-field" },
-                h("label", { className: "dsdr-label", htmlFor: "dsdr-schedule-frequency" }, t("schedule.title", "自动生成")),
+                h("label", { className: "dsdr-label", htmlFor: "dsdr-schedule-frequency" }, t("schedule.frequency", "频率")),
                 h(
                   "select",
                   {
@@ -1849,6 +2190,80 @@ window.__ModuleLoader__.load({
               ),
             ),
             h("div", { className: "dsdr-hint" }, t("schedule.hint", "自动生成使用当前保存的数据源、AI 设置和格式。")),
+            h(
+              "div",
+              { className: "dsdr-schedule-status" },
+              h(
+                "div",
+                { className: "dsdr-schedule-status-head" },
+                h(
+                  "div",
+                  { className: "dsdr-hint" },
+                  scheduleStatus && scheduleStatus.running
+                    ? t("schedule.inProgress", "自动生成进行中…")
+                    : scheduleStatus && scheduleStatus.state && scheduleStatus.state.lastAt
+                      ? t("schedule.last", "上次生成：") + scheduleStatus.state.lastAt
+                      : t("schedule.none", "尚未生成"),
+                ),
+                h(
+                  "div",
+                  { className: "dsdr-actions" },
+                  h(
+                    "button",
+                    { type: "button", className: "dsdr-btn dsdr-btn-with-icon", onClick: loadScheduleStatus },
+                    h(RefreshIcon, { size: 14 }),
+                    h("span", null, t("schedule.refresh", "刷新状态")),
+                  ),
+                  h(
+                    "button",
+                    { type: "button", className: "dsdr-btn dsdr-btn-primary dsdr-btn-with-icon", onClick: runScheduleNow, disabled: scheduleLoading || (scheduleStatus && scheduleStatus.running) },
+                    h(PlayIcon, { size: 14 }),
+                    h("span", null, scheduleLoading ? t("schedule.running", "正在生成…") : t("schedule.runNow", "立即运行一次")),
+                  ),
+                ),
+              ),
+              scheduleError ? h("div", { className: "dsdr-error" }, scheduleError) : null,
+              scheduleStatus && scheduleStatus.state && scheduleStatus.state.lastStatus === "error" && scheduleStatus.state.lastError
+                ? h("div", { className: "dsdr-error" }, scheduleStatus.state.lastError)
+                : null,
+              scheduleStatus && scheduleStatus.state && scheduleStatus.state.lastFile
+                ? h(
+                    "div",
+                    { className: "dsdr-hint" },
+                    h(
+                      "a",
+                      {
+                        className: "dsdr-history-link",
+                        href: API + "/schedule/file?name=" + encodeURIComponent(scheduleStatus.state.lastFile),
+                        download: scheduleStatus.state.lastFile,
+                      },
+                      scheduleStatus.state.lastFile,
+                    ),
+                  )
+                : null,
+              h("div", { className: "dsdr-hint" }, t("schedule.history", "历史文件")),
+              scheduleStatus && scheduleStatus.directory
+                ? h("div", { className: "dsdr-hint dsdr-code" }, t("schedule.directory", "历史目录：") + scheduleStatus.directory)
+                : null,
+              scheduleStatus && scheduleStatus.history && scheduleStatus.history.length > 0
+                ? h(
+                    "div",
+                    { className: "dsdr-history-list" },
+                    scheduleStatus.history.slice(0, 8).map((file) =>
+                      h(
+                        "a",
+                        {
+                          key: file.name,
+                          className: "dsdr-history-link",
+                          href: API + "/schedule/file?name=" + encodeURIComponent(file.name),
+                          download: file.name,
+                        },
+                        file.name,
+                      ),
+                    ),
+                  )
+                : h("div", { className: "dsdr-hint" }, t("schedule.noHistory", "暂无历史文件")),
+            ),
           ),
 
           h(
@@ -1869,8 +2284,9 @@ window.__ModuleLoader__.load({
               ),
               h(
                 "button",
-                { type: "button", className: "dsdr-btn", onClick: testSources, disabled: testingSources },
-                testingSources ? t("test.testing", "测试中…") : t("test.button", "测试数据源"),
+                { type: "button", className: "dsdr-btn dsdr-btn-with-icon", onClick: testSources, disabled: testingSources },
+                h(TestIcon, { size: 14 }),
+                h("span", null, testingSources ? t("test.testing", "测试中…") : t("test.button", "测试数据源")),
               ),
             ),
             h(
@@ -1946,7 +2362,12 @@ window.__ModuleLoader__.load({
               h(
                 "div",
                 { className: "dsdr-actions" },
-                h("button", { type: "button", className: "dsdr-btn", onClick: toggleScan }, t("scan.open", "扫描目录")),
+                h(
+                  "button",
+                  { type: "button", className: "dsdr-btn dsdr-btn-with-icon", onClick: toggleScan },
+                  h(ScanIcon, { size: 14 }),
+                  h("span", null, t("scan.open", "扫描目录")),
+                ),
                 h("button", { type: "button", className: "dsdr-btn", onClick: addGit }, "+ " + t("git.add", "添加仓库")),
               ),
             ),
