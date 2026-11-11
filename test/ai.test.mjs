@@ -100,6 +100,7 @@ const cacheFile = join(root, "ai-cache.json");
 const analysis = await analyzeReport(ctx, result, {
   locale: "zh",
   cacheFile,
+  template: "detailed",
   onProgress: (event) => analysisProgress.push(event),
 });
 assert.equal(analysis.ok, true);
@@ -112,7 +113,7 @@ assert.ok(analysisProgress.some((event) => event.stage === "ai-start" && event.i
 assert.ok(analysisProgress.some((event) => event.stage === "ai-stream"));
 assert.ok(analysisProgress.some((event) => event.stage === "ai-parse" && event.percent === 94));
 
-const cachedAnalysis = await analyzeReport(ctx, result, { locale: "zh", cacheFile });
+const cachedAnalysis = await analyzeReport(ctx, result, { locale: "zh", cacheFile, template: "detailed" });
 assert.equal(streamCalls, 1);
 assert.equal(cachedAnalysis.ok, true);
 assert.equal(cachedAnalysis.cachedDays, 2);
@@ -122,6 +123,7 @@ assert.ok(capturedOptions);
 assert.equal(capturedOptions.provider, "test");
 assert.equal(capturedOptions.reasoningEffort, "low");
 assert.match(capturedOptions.messages[0].content[0].text, /实现登录校验/);
+assert.match(capturedOptions.messages[0].content[0].text, /3-5/);
 
 result.ai = analysis;
 const summary = summarizeReport(result);

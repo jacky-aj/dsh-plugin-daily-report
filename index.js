@@ -14,10 +14,11 @@ import {
   collectReport,
   defaultMonthRange,
   discoverGitRepositories,
+  formatLocalDate,
   parseIsoDate,
   sanitizeSettings,
 } from "./lib/collect.js";
-import { aiInfo, analyzeReport, regenerateDay } from "./lib/ai.js";
+import { aiInfo, analyzeReport, availableAiModels, regenerateDay } from "./lib/ai.js";
 import { buildCsvReport, buildHtmlReport, buildMarkdownReport } from "./lib/formats.js";
 import { buildReportWorkbook, reportFileName, summarizeReport, buildReportPreview, applyReportEdits } from "./lib/report.js";
 
@@ -31,7 +32,9 @@ const ROUTE_JOB_FILE = "/daily-report/job/file";
 const ROUTE_JOB_PREVIEW = "/daily-report/job/preview";
 const ROUTE_JOB_EXPORT = "/daily-report/job/export";
 const ROUTE_JOB_REGENERATE = "/daily-report/job/regenerate-day";
+const ROUTE_JOB_CANCEL = "/daily-report/job/cancel";
 const ROUTE_SCAN = "/daily-report/scan";
+const ROUTE_TEST = "/daily-report/test-sources";
 const MAX_BODY = 2 * 1024 * 1024;
 const MAX_RANGE_DAYS = 366;
 const JOB_TTL = 60 * 60 * 1000;
@@ -41,6 +44,13 @@ const REPORT_FORMATS = new Set(["xlsx", "markdown", "csv", "html"]);
 
 function normalizeFormat(value) {
   return typeof value === "string" && REPORT_FORMATS.has(value) ? value : "xlsx";
+}
+
+function parseAuthorEmails(value) {
+  return String(value || "")
+    .split(/[,;\s]+/)
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
 }
 
 function formatContentType(format) {
@@ -62,6 +72,14 @@ const DEFAULT_SETTINGS = {
   docs: [],
   aiEnabled: true,
   mineOnly: true,
+  excludeMerges: true,
+  authorEmails: "",
+  aiTemplate: "concise",
+  aiProvider: "",
+  aiModel: "",
+  scheduleEnabled: false,
+  scheduleFrequency: "daily",
+  scheduleTime: "18:30",
   format: "xlsx",
   range: null,
 };
@@ -243,6 +261,99 @@ async function writeSettings(settings) {
   await fs.rename(temporary, file);
 }
 
+function scheduleStatePath() {
+  return join(homeDirectory(), "daily-report", "schedule-state.json");
+}
+
+async function readScheduleState() {
+  try {
+    const parsed = JSON.parse(await fs.readFile(scheduleStatePath(), "utf8"));
+    return {
+      lastDaily: typeof parsed.lastDaily === "string" ? parsed.lastDaily : "",
+      lastWeekly: typeof parsed.lastWeekly === "string" ? parsed.lastWeekly : "",
+    };
+  } catch {
+    return { lastDaily: "", lastWeekly: "" };
+  }
+}
+
+async function writeScheduleState(state) {
+  const file = scheduleStatePath();
+  await fs.mkdir(dirname(file), { recursive: true });
+  await fs.writeFile(file, JSON.stringify(state, null, 2), "utf8");
+}
+
+function isoWeekKey(date) {
+  const value = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = value.getUTCDay() || 7;
+  value.setUTCDate(value.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(value.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((value - yearStart) / 86400000 + 1) / 7);
+  return value.getUTCFullYear() + "-W" + String(week).padStart(2, "0");
+}
+
+function scheduledRange(frequency, now) {
+  if (frequency === "weekly") {
+    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+    const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
+    return { start: formatLocalDate(monday), end: formatLocalDate(sunday) };
+  }
+  const today = formatLocalDate(now);
+  return { start: today, end: today };
+}
+
+let scheduleRunning = false;
+
+async function checkSchedule(ctx) {
+  if (scheduleRunning) return;
+  const { settings } = await readSettings();
+  if (!settings.scheduleEnabled) return;
+  const now = new Date();
+  const currentTime = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+  if (currentTime < settings.scheduleTime) return;
+  const dateKey = formatLocalDate(now);
+  const weekKey = isoWeekKey(now);
+  const state = await readScheduleState();
+  if (settings.scheduleFrequency === "weekly") {
+    if (now.getDay() !== 1 || state.lastWeekly === weekKey) return;
+  } else if (state.lastDaily === dateKey) {
+    return;
+  }
+  scheduleRunning = true;
+  const range = scheduledRange(settings.scheduleFrequency, now);
+  try {
+    const generated = await generateFromRequest(
+      ctx,
+      { settings, start: range.start, end: range.end, ai: settings.aiEnabled === true, locale: "zh" },
+      undefined,
+    );
+    const buffer = buildReportBuffer(generated.result, settings.format);
+    const directory = join(homeDirectory(), "daily-report", "history");
+    await fs.mkdir(directory, { recursive: true });
+    await fs.writeFile(join(directory, reportFileName(range.start, range.end, settings.format)), buffer);
+  } catch {
+    // Mark the attempt so a persistent failure does not retry every minute.
+  } finally {
+    state.lastDaily = dateKey;
+    if (settings.scheduleFrequency === "weekly") state.lastWeekly = weekKey;
+    await writeScheduleState(state).catch(() => {});
+    scheduleRunning = false;
+  }
+}
+
+function startScheduler(ctx) {
+  const timer = setInterval(() => {
+    void checkSchedule(ctx).catch(() => {});
+  }, 60000);
+  const first = setTimeout(() => {
+    void checkSchedule(ctx).catch(() => {});
+  }, 5000);
+  ctx.effect(() => () => {
+    clearInterval(timer);
+    clearTimeout(first);
+  }, "daily-report: scheduled generation");
+}
+
 function resolveCwd(ctx, sessionId) {
   try {
     const sessions = ctx.get("sessions");
@@ -314,6 +425,8 @@ async function generateFromRequest(ctx, body, signal, onProgress) {
     signal,
     includeDiff: wantAi,
     mineOnly: settings.mineOnly === true,
+    excludeMerges: settings.excludeMerges !== false,
+    authorEmails: parseAuthorEmails(settings.authorEmails),
     onProgress: report,
     now: new Date(),
   });
@@ -324,7 +437,15 @@ async function generateFromRequest(ctx, body, signal, onProgress) {
     throw error;
   }
   if (wantAi) {
-    result.ai = await analyzeReport(ctx, result, { signal, locale, onProgress: report, cacheFile: aiCachePath() });
+    result.ai = await analyzeReport(ctx, result, {
+      signal,
+      locale,
+      onProgress: report,
+      cacheFile: aiCachePath(),
+      provider: settings.aiProvider,
+      model: settings.aiModel,
+      template: settings.aiTemplate,
+    });
     if (!result.ai.ok) {
       result.warnings.push("AI 分析未完成：" + (result.ai.error || "未知错误"));
     } else {
@@ -485,6 +606,8 @@ function registerTool(ctx) {
         signal: exec.signal,
         includeDiff: wantAi,
         mineOnly: settings.mineOnly === true,
+        excludeMerges: settings.excludeMerges !== false,
+        authorEmails: parseAuthorEmails(settings.authorEmails),
         now: new Date(),
       });
       if (result.stats.sources > 0 && result.stats.okSources === 0) {
@@ -493,7 +616,14 @@ function registerTool(ctx) {
         throw error;
       }
       if (wantAi) {
-        result.ai = await analyzeReport(ctx, result, { signal: exec.signal, locale, cacheFile: aiCachePath() });
+        result.ai = await analyzeReport(ctx, result, {
+          signal: exec.signal,
+          locale,
+          cacheFile: aiCachePath(),
+          provider: settings.aiProvider,
+          model: settings.aiModel,
+          template: settings.aiTemplate,
+        });
         if (!result.ai.ok) {
           result.warnings.push("AI 分析未完成：" + (result.ai.error || "未知错误"));
         } else {
@@ -538,12 +668,14 @@ export function apply(ctx) {
       if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method === "GET") {
         const saved = await readSettings();
+        const ai = aiInfo(ctx);
+        ai.models = ai.available ? await availableAiModels(ctx) : [];
         return sendJson(res, 200, {
           settings: saved.settings,
           saved: saved.saved,
           warning: saved.warning,
           defaults: defaultMonthRange(new Date()),
-          ai: aiInfo(ctx),
+          ai,
         });
       }
       if (req.method === "PUT") {
@@ -774,6 +906,9 @@ export function apply(ctx) {
           locale: job.result.locale,
           manualItems: Array.isArray(body.manualItems) ? body.manualItems : [],
           cacheFile: aiCachePath(),
+          provider: job.result.settings.aiProvider,
+          model: job.result.settings.aiModel,
+          template: job.result.settings.aiTemplate,
         });
         return sendJson(res, 200, regenerated);
       } catch (error) {
@@ -783,7 +918,79 @@ export function apply(ctx) {
     "daily-report: preview regenerate route",
   );
 
+  registerRoute(
+    ctx,
+    ROUTE_TEST,
+    async (req, res) => {
+      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
+      if (req.method !== "POST") {
+        res.setHeader("allow", "POST");
+        return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
+      }
+      let body;
+      try {
+        body = await readBody(req);
+      } catch (error) {
+        return sendError(res, error.message === "body-too-large" ? 413 : 400, error.message, "请求内容无效。");
+      }
+      const settings = sanitizeSettings(body.settings);
+      if (settings.git.length === 0 && settings.docs.length === 0) {
+        return sendError(res, 400, "no-sources", "请至少添加一个 Git 仓库或本地文档。");
+      }
+      const today = formatLocalDate(new Date());
+      try {
+        const tested = await collectReport({
+          settings,
+          start: today,
+          end: today,
+          cwd: resolveCwd(ctx, body.sessionId),
+          homeDir: homeDirectory(),
+          locale: "zh",
+          includeDiff: false,
+          mineOnly: settings.mineOnly === true,
+          excludeMerges: settings.excludeMerges !== false,
+          authorEmails: parseAuthorEmails(settings.authorEmails),
+          now: new Date(),
+        });
+        return sendJson(res, 200, { sources: tested.sources, warnings: tested.warnings });
+      } catch (error) {
+        return sendError(res, 400, "test-failed", error.message || "测试数据源失败。");
+      }
+    },
+    "daily-report: source test route",
+  );
+
+  registerRoute(
+    ctx,
+    ROUTE_JOB_CANCEL,
+    async (req, res) => {
+      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
+      if (req.method !== "POST") {
+        res.setHeader("allow", "POST");
+        return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
+      }
+      let body;
+      try {
+        body = await readBody(req);
+      } catch {
+        return sendError(res, 400, "invalid-body", "请求内容无效。");
+      }
+      const job = jobs.get(typeof body.jobId === "string" ? body.jobId : "");
+      if (!job) return sendError(res, 404, "job-not-found", "生成任务不存在或已过期。");
+      if (job.status === "done" || job.status === "failed" || job.status === "cancelled") {
+        return sendJson(res, 200, { ok: true, status: job.status });
+      }
+      job.controller.abort(new Error("用户已取消"));
+      job.status = "cancelling";
+      job.progress = normalizeProgress({ stage: "cancelled", percent: job.progress.percent, message: "正在取消生成…" });
+      job.updatedAt = Date.now();
+      return sendJson(res, 200, { ok: true, status: job.status });
+    },
+    "daily-report: job cancel route",
+  );
+
   registerTool(ctx);
+  startScheduler(ctx);
 }
 
 

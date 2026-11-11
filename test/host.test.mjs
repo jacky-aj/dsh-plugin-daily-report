@@ -112,6 +112,9 @@ const putState = await request("/daily-report/state", "PUT", {
     docs: [{ location: notes, label: "笔记" }],
     aiEnabled: false,
     format: "markdown",
+    aiTemplate: "manager",
+    authorEmails: "me@example.com",
+    excludeMerges: false,
     range: { start: "2026-10-01", end: "2026-10-31" },
   },
 });
@@ -120,6 +123,9 @@ const savedState = await request("/daily-report/state?sessionId=", "GET");
 const savedPayload = JSON.parse(savedState.body.toString("utf8"));
 assert.equal(savedPayload.settings.aiEnabled, false);
 assert.equal(savedPayload.settings.format, "markdown");
+assert.equal(savedPayload.settings.aiTemplate, "manager");
+assert.equal(savedPayload.settings.authorEmails, "me@example.com");
+assert.equal(savedPayload.settings.excludeMerges, false);
 assert.deepEqual(savedPayload.settings.range, { start: "2026-10-01", end: "2026-10-31" });
 
 const generate = await request("/daily-report/generate", "POST", {
@@ -200,6 +206,19 @@ const scanned = JSON.parse(scan.body.toString("utf8"));
 assert.equal(scanned.repos.length, 1);
 assert.equal(scanned.repos[0].branch, "main");
 assert.equal(scanned.repos[0].label, "repo");
+
+const tested = await request("/daily-report/test-sources", "POST", {
+  settings: {
+    git: [{ location: repo, branch: "main", label: "本地仓库" }],
+    docs: [{ location: notes, label: "笔记" }],
+  },
+});
+assert.equal(tested.status, 200);
+const testedPayload = JSON.parse(tested.body.toString("utf8"));
+assert.equal(testedPayload.sources.length, 2);
+
+const cancelled = await request("/daily-report/job/cancel", "POST", { jobId: startPayload.jobId });
+assert.equal(cancelled.status, 200);
 
 const toolResult = await tools[0].execute(
   { start: "2026-11-01", end: "2026-11-30", git: [{ location: repo, branch: "main" }], docs: [notes] },

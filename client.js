@@ -20,6 +20,8 @@ window.__ModuleLoader__.load({
       "range.thisMonth": "本月",
       "range.lastMonth": "上月",
       "range.last7": "最近 7 天",
+      "range.yesterday": "昨天",
+      "range.thisWeek": "本周",
       "range.days": "天",
       "range.total": "共",
       "git.title": "Git 仓库",
@@ -32,6 +34,15 @@ window.__ModuleLoader__.load({
       "git.empty": "还没有 Git 仓库。",
       "git.mine": "仅统计我的提交",
       "git.mineHint": "按各仓库 git config user.email / user.name 过滤",
+      "git.excludeMerges": "排除 merge commit",
+      "git.authorEmails": "作者邮箱（可选）",
+      "git.authorEmailsHint": "留空自动读取各仓库 git config；多个邮箱用逗号分隔",
+      "test.button": "测试数据源",
+      "test.testing": "测试中…",
+      "test.failed": "测试数据源失败",
+      "test.ok": "正常",
+      cancel: "取消",
+      retry: "重试",
       "scan.open": "扫描目录",
       "scan.title": "从目录批量添加",
       "scan.desc": "扫描目录下最多 6 层的 Git 仓库，已存在的会自动跳过。",
@@ -57,6 +68,23 @@ window.__ModuleLoader__.load({
       "ai.model": "当前模型：",
       "ai.unavailable": "当前没有可用的默认模型。",
       "ai.cost": "会增加生成时间和模型 token 消耗。",
+      "ai.template": "分析风格",
+      "ai.template.concise": "简洁",
+      "ai.template.detailed": "详细",
+      "ai.template.manager": "管理汇报",
+      "ai.modelSelect": "模型",
+      "ai.defaultModel": "默认模型",
+      "schedule.title": "自动生成",
+      "schedule.desc": "在 DSH 运行期间按设定时间自动生成报告，并保存到本地历史目录。",
+      "schedule.enable": "启用自动生成",
+      "schedule.daily": "每天",
+      "schedule.weekly": "每周一",
+      "schedule.time": "生成时间",
+      "schedule.hint": "自动生成使用当前保存的数据源、AI 设置和格式。",
+      "datasource.title": "数据源配置",
+      "datasource.desc": "统一管理 Git 仓库与本地文档，生成时合并到同一份日报。",
+      "datasource.git": "Git 仓库",
+      "datasource.docs": "本地文档",
       "progress.start": "正在创建生成任务…",
       "progress.done": "生成完成，正在下载…",
       "progress.preview": "生成完成，请预览并编辑后导出 XLSX。",
@@ -133,6 +161,8 @@ window.__ModuleLoader__.load({
       "range.thisMonth": "This month",
       "range.lastMonth": "Last month",
       "range.last7": "Last 7 days",
+      "range.yesterday": "Yesterday",
+      "range.thisWeek": "This week",
       "range.days": "days",
       "range.total": "Total",
       "git.title": "Git repositories",
@@ -145,6 +175,15 @@ window.__ModuleLoader__.load({
       "git.empty": "No repositories yet.",
       "git.mine": "Only my commits",
       "git.mineHint": "Filter by each repository's git config user.email / user.name",
+      "git.excludeMerges": "Exclude merge commits",
+      "git.authorEmails": "Author emails (optional)",
+      "git.authorEmailsHint": "Leave empty to read each repository's git config; separate multiple emails with commas",
+      "test.button": "Test sources",
+      "test.testing": "Testing…",
+      "test.failed": "Could not test data sources",
+      "test.ok": "OK",
+      cancel: "Cancel",
+      retry: "Retry",
       "scan.open": "Scan directory",
       "scan.title": "Add repositories from a directory",
       "scan.desc": "Scans up to 6 levels deep for Git repositories and skips ones already added.",
@@ -170,6 +209,23 @@ window.__ModuleLoader__.load({
       "ai.model": "Current model: ",
       "ai.unavailable": "No default model is available.",
       "ai.cost": "This adds generation time and model token usage.",
+      "ai.template": "Analysis style",
+      "ai.template.concise": "Concise",
+      "ai.template.detailed": "Detailed",
+      "ai.template.manager": "Manager summary",
+      "ai.modelSelect": "Model",
+      "ai.defaultModel": "Default model",
+      "schedule.title": "Scheduled generation",
+      "schedule.desc": "While DSH is running, generate a report at the configured time and save it to the local history folder.",
+      "schedule.enable": "Enable scheduled generation",
+      "schedule.daily": "Daily",
+      "schedule.weekly": "Every Monday",
+      "schedule.time": "Time",
+      "schedule.hint": "Scheduled runs use the saved sources, AI settings and format.",
+      "datasource.title": "Data sources",
+      "datasource.desc": "Manage Git repositories and local documents together; both feed the same report.",
+      "datasource.git": "Git repositories",
+      "datasource.docs": "Local documents",
       "progress.start": "Creating the report job…",
       "progress.done": "Done. Preparing the download…",
       "progress.preview": "Generated. Review, edit, then export the XLSX.",
@@ -268,6 +324,19 @@ window.__ModuleLoader__.load({
       return { start: formatDate(start), end: formatDate(now) };
     }
 
+    function yesterdayRange() {
+      const now = new Date();
+      const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+      return { start: formatDate(yesterday), end: formatDate(yesterday) };
+    }
+
+    function thisWeekRange() {
+      const now = new Date();
+      const mondayOffset = (now.getDay() + 6) % 7;
+      const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - mondayOffset);
+      return { start: formatDate(monday), end: formatDate(now) };
+    }
+
     function daysBetween(start, end) {
       if (!start || !end) return 0;
       const first = new Date(start + "T00:00:00");
@@ -296,7 +365,19 @@ window.__ModuleLoader__.load({
             };
           })
         : [];
-      return { git, docs, mineOnly: source.mineOnly !== false };
+      return {
+        git,
+        docs,
+        mineOnly: source.mineOnly !== false,
+        excludeMerges: source.excludeMerges !== false,
+        authorEmails: typeof source.authorEmails === "string" ? source.authorEmails : "",
+        aiTemplate: ["concise", "detailed", "manager"].includes(source.aiTemplate) ? source.aiTemplate : "concise",
+        aiProvider: typeof source.aiProvider === "string" ? source.aiProvider : "",
+        aiModel: typeof source.aiModel === "string" ? source.aiModel : "",
+        scheduleEnabled: source.scheduleEnabled === true,
+        scheduleFrequency: source.scheduleFrequency === "weekly" ? "weekly" : "daily",
+        scheduleTime: typeof source.scheduleTime === "string" ? source.scheduleTime : "18:30",
+      };
     }
 
     function cleanSettings(settings, aiEnabled, range, format) {
@@ -316,6 +397,14 @@ window.__ModuleLoader__.load({
           .filter((item) => item.location.length > 0),
         aiEnabled: aiEnabled !== false,
         mineOnly: settings.mineOnly !== false,
+        excludeMerges: settings.excludeMerges !== false,
+        authorEmails: (settings.authorEmails || "").trim(),
+        aiTemplate: ["concise", "detailed", "manager"].includes(settings.aiTemplate) ? settings.aiTemplate : "concise",
+        aiProvider: (settings.aiProvider || "").trim(),
+        aiModel: (settings.aiModel || "").trim(),
+        scheduleEnabled: settings.scheduleEnabled === true,
+        scheduleFrequency: settings.scheduleFrequency === "weekly" ? "weekly" : "daily",
+        scheduleTime: /^\d{2}:\d{2}$/.test(settings.scheduleTime) ? settings.scheduleTime : "18:30",
         format: FORMAT_OPTIONS.includes(format) ? format : "xlsx",
         range:
           range && typeof range.start === "string" && typeof range.end === "string"
@@ -408,7 +497,15 @@ window.__ModuleLoader__.load({
       ".dsdr-card { border: 1px solid var(--dsw-alias-border-l1); border-radius: 12px; background: var(--dsw-alias-bg-layer-1); padding: 16px 18px; }",
       ".dsdr-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }",
       ".dsdr-card-title { font-size: 14px; line-height: 22px; font-weight: 600; }",
+      ".dsdr-ai-title { display: inline-block; font-size: 15px; font-weight: 700; letter-spacing: .03em; background: linear-gradient(100deg, #0f766e 0%, #06b6d4 22%, #3b82f6 46%, #8b5cf6 70%, #0f766e 100%); background-size: 320% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 7px rgba(20, 184, 166, .22)); animation: dsdr-ai-gradient 5s ease-in-out infinite; }",
+      "@keyframes dsdr-ai-gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }",
+      "@media (prefers-reduced-motion: reduce) { .dsdr-ai-title { animation: none; } }",
       ".dsdr-card-desc { margin-top: 2px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }",
+      ".dsdr-title-with-info { display: flex; align-items: center; gap: 6px; min-width: 0; }",
+      ".dsdr-info { position: relative; display: inline-flex; flex: none; align-items: center; justify-content: center; width: 15px; height: 15px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 50%; color: var(--dsw-alias-label-secondary); font-family: Georgia, serif; font-size: 10px; font-style: italic; font-weight: 700; line-height: 1; cursor: help; }",
+      ".dsdr-info:hover, .dsdr-info:focus-visible { border-color: #146b5a; color: #146b5a; outline: none; }",
+      ".dsdr-info::after { content: attr(data-tip); position: absolute; top: calc(100% + 8px); left: 50%; z-index: 80; width: max-content; max-width: 280px; padding: 7px 9px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: var(--dsw-alias-bg-overlay); color: var(--dsw-alias-label-primary); box-shadow: 0 7px 20px rgba(0, 0, 0, .2); font-family: inherit; font-size: 11px; font-style: normal; font-weight: 400; line-height: 17px; text-align: left; white-space: normal; opacity: 0; visibility: hidden; transform: translate(-50%, -3px); transition: opacity .15s ease, transform .15s ease, visibility .15s ease; pointer-events: none; }",
+      ".dsdr-info:hover::after, .dsdr-info:focus-visible::after { opacity: 1; visibility: visible; transform: translate(-50%, 0); }",
       ".dsdr-range { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; }",
       ".dsdr-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }",
       ".dsdr-label { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }",
@@ -456,6 +553,16 @@ window.__ModuleLoader__.load({
       ".dsdr-manual-remove { border: 0; background: transparent; color: var(--dsw-alias-state-error-primary); font: inherit; font-size: 14px; line-height: 16px; padding: 0 1px; cursor: pointer; }",
       ".dsdr-ai-text { margin-top: 5px; color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 20px; white-space: pre-wrap; }",
       ".dsdr-filter-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 10px; }",
+      ".dsdr-datasource-tabs { margin-bottom: -16px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }",
+      ".dsdr-datasource-panel { border-top-left-radius: 0; border-top-right-radius: 0; }",
+      ".dsdr-tabs { display: flex; align-items: center; gap: 4px; margin-top: 12px; border-bottom: 1px solid var(--dsw-alias-border-l1); }",
+      ".dsdr-tab { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px 8px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--dsw-alias-label-secondary); font: inherit; font-size: 12px; line-height: 18px; cursor: pointer; }",
+      ".dsdr-tab:hover { color: var(--dsw-alias-label-primary); }",
+      ".dsdr-tab.is-active { color: var(--dsw-alias-label-primary); border-bottom-color: #146b5a; font-weight: 600; }",
+      ".dsdr-tab-count { display: inline-flex; min-width: 17px; height: 17px; align-items: center; justify-content: center; padding: 0 5px; border-radius: 999px; background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-secondary); font-size: 10px; line-height: 17px; }",
+      ".dsdr-filter-author { flex: 1 1 280px; min-width: 220px; }",
+      ".dsdr-ai-options { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-top: 10px; }",
+      ".dsdr-test-results { display: flex; flex-direction: column; gap: 5px; margin: 0 0 10px; padding: 8px 10px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; background: var(--dsw-alias-bg-layer-2); }",
       ".dsdr-scan { display: flex; flex-direction: column; gap: 7px; margin: 0 0 12px; padding: 12px; border: 1px dashed var(--dsw-alias-border-l2); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }",
       ".dsdr-scan-title { font-size: 13px; line-height: 20px; font-weight: 600; }",
       ".dsdr-scan-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }",
@@ -463,6 +570,7 @@ window.__ModuleLoader__.load({
       ".dsdr-icon-btn { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; line-height: 1; font-size: 18px; }",
       ".dsdr-hint { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }",
       ".dsdr-error { border: 1px solid var(--dsw-alias-state-error-primary); border-radius: 9px; color: var(--dsw-alias-state-error-primary); background: transparent; padding: 9px 12px; font-size: 12px; line-height: 18px; white-space: pre-wrap; }",
+      ".dsdr-error-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }",
       ".dsdr-notice { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }",
       ".dsdr-ok { color: var(--dsw-alias-state-success-primary); }",
       ".dsdr-warn { color: var(--dsw-alias-state-warn-primary); }",
@@ -483,7 +591,7 @@ window.__ModuleLoader__.load({
       ".dsdr-code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; }",
       ".dsdr-footer { color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 17px; }",
       ".dsdr-spacer { flex: 1; }",
-      "@media (max-width: 780px) { .dsdr-page { padding: 20px 16px 40px; } .dsdr-hero-action { flex: 1 0 100%; width: 100%; align-items: stretch; margin-left: 0; } .dsdr-hero-buttons { width: 100%; } .dsdr-hero-buttons .dsdr-btn { flex: 1; } .dsdr-split { flex: 1; } .dsdr-split .dsdr-generate { flex: 1; } .dsdr-generate { width: 100%; } .dsdr-range { grid-template-columns: 1fr 1fr; } .dsdr-range .dsdr-actions { grid-column: 1 / -1; } .dsdr-stats { grid-template-columns: 1fr 1fr; } .dsdr-scan-row { grid-template-columns: 1fr; } .dsdr-manual-add { grid-template-columns: 1fr; } .dsdr-source, .dsdr-source-docs { grid-template-columns: 1fr; } .dsdr-source .dsdr-icon-btn { justify-self: end; } }",
+      "@media (max-width: 780px) { .dsdr-page { padding: 20px 16px 40px; } .dsdr-hero-action { flex: 1 0 100%; width: 100%; align-items: stretch; margin-left: 0; } .dsdr-hero-buttons { width: 100%; } .dsdr-hero-buttons .dsdr-btn { flex: 1; } .dsdr-split { flex: 1; } .dsdr-split .dsdr-generate { flex: 1; } .dsdr-generate { width: 100%; } .dsdr-ai-options { grid-template-columns: 1fr; } .dsdr-range { grid-template-columns: 1fr 1fr; } .dsdr-range .dsdr-actions { grid-column: 1 / -1; } .dsdr-stats { grid-template-columns: 1fr 1fr; } .dsdr-scan-row { grid-template-columns: 1fr; } .dsdr-manual-add { grid-template-columns: 1fr; } .dsdr-source, .dsdr-source-docs { grid-template-columns: 1fr; } .dsdr-source .dsdr-icon-btn { justify-self: end; } }",
     ].join(NL);
 
     function installStyles(ctx) {
@@ -588,6 +696,16 @@ window.__ModuleLoader__.load({
       );
     }
 
+    function InfoDot(props) {
+      return h("span", {
+        className: "dsdr-info",
+        role: "img",
+        tabIndex: 0,
+        "aria-label": props.text,
+        "data-tip": props.text,
+      }, "i");
+    }
+
     function DailyReportView(props) {
       const ctx = props.ctx;
       const t = useTranslate(ctx);
@@ -595,7 +713,7 @@ window.__ModuleLoader__.load({
       const [range, setRange] = React.useState(currentMonthRange);
       const [exportFormat, setExportFormat] = React.useState("xlsx");
       const [formatMenuOpen, setFormatMenuOpen] = React.useState(false);
-      const [aiInfo, setAiInfo] = React.useState({ available: false, provider: "", model: "" });
+      const [aiInfo, setAiInfo] = React.useState({ available: false, provider: "", model: "", models: [] });
       const [useAi, setUseAi] = React.useState(true);
       const [loading, setLoading] = React.useState(true);
       const [loadError, setLoadError] = React.useState("");
@@ -616,12 +734,17 @@ window.__ModuleLoader__.load({
       const [manualDate, setManualDate] = React.useState("");
       const [manualText, setManualText] = React.useState("");
       const [expandedPreviewDays, setExpandedPreviewDays] = React.useState({});
+      const [testingSources, setTestingSources] = React.useState(false);
+      const [testResults, setTestResults] = React.useState(null);
+      const [testError, setTestError] = React.useState("");
+      const [dataSourceTab, setDataSourceTab] = React.useState("git");
       const firstSave = React.useRef(true);
       const resultRef = React.useRef(null);
       const pollAbortRef = React.useRef(null);
       const saveAbortRef = React.useRef(null);
       const saveTimerRef = React.useRef(null);
       const formatMenuRef = React.useRef(null);
+      const jobIdRef = React.useRef("");
       const sessionId = typeof props.sessionId === "string" ? props.sessionId : "";
       const localeIsEnglish = currentLocaleId(ctx).toLowerCase().startsWith("en");
 
@@ -670,6 +793,7 @@ window.__ModuleLoader__.load({
               available: nextAi.available === true,
               provider: typeof nextAi.provider === "string" ? nextAi.provider : "",
               model: typeof nextAi.model === "string" ? nextAi.model : "",
+              models: Array.isArray(nextAi.models) ? nextAi.models : [],
             });
             const savedRange = payload && payload.settings && payload.settings.range;
             if (savedRange && typeof savedRange.start === "string" && typeof savedRange.end === "string") {
@@ -774,6 +898,52 @@ window.__ModuleLoader__.load({
           saveTimerRef.current = null;
         }
         persistSettings();
+      }
+
+      async function testSources() {
+        if (testingSources) return;
+        setTestingSources(true);
+        setTestError("");
+        setTestResults(null);
+        try {
+          const response = await fetch(API + "/test-sources", {
+            method: "POST",
+            headers: { "content-type": "application/json", accept: "application/json" },
+            body: JSON.stringify({ settings: cleanSettings(settings, useAi, range, exportFormat), sessionId }),
+          });
+          if (!response.ok) {
+            let payload = null;
+            try {
+              payload = await response.json();
+            } catch {
+              payload = null;
+            }
+            throw new Error(errorMessageFromPayload(payload));
+          }
+          const payload = await response.json();
+          setTestResults(Array.isArray(payload.sources) ? payload.sources : []);
+        } catch (err) {
+          setTestError(err && err.message ? err.message : t("test.failed", "测试数据源失败"));
+        } finally {
+          setTestingSources(false);
+        }
+      }
+
+      async function cancelGeneration() {
+        const jobId = jobIdRef.current;
+        if (jobId.length === 0) return;
+        try {
+          await fetch(API + "/job/cancel", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ jobId }),
+          });
+        } catch {
+          // The local abort below still stops the UI polling.
+        }
+        if (pollAbortRef.current) pollAbortRef.current.abort();
+        setProgress(null);
+        setGenerating(false);
       }
 
       function toggleScan() {
@@ -1092,6 +1262,7 @@ window.__ModuleLoader__.load({
           const started = await startResponse.json();
           const jobId = started && typeof started.jobId === "string" ? started.jobId : "";
           if (jobId.length === 0) throw new Error(t("error.generate", "生成失败"));
+          jobIdRef.current = jobId;
           while (true) {
             if (controller.signal.aborted) {
               const aborted = new Error("aborted");
@@ -1153,6 +1324,7 @@ window.__ModuleLoader__.load({
           setError(err && err.message ? err.message : t("error.generate", "生成失败"));
         } finally {
           if (pollAbortRef.current === controller) pollAbortRef.current = null;
+          jobIdRef.current = "";
           setGenerating(false);
         }
       }
@@ -1275,7 +1447,12 @@ window.__ModuleLoader__.load({
                   "div",
                   { className: "dsdr-progress-head" },
                   h("span", null, (progress && progress.message) || t("generating", "正在收集并生成…")),
-                  h("span", { className: "dsdr-progress-value" }, progress && !progress.indeterminate ? Math.round(Number(progress.percent) || 0) + "%" : "…"),
+                  h(
+                    "div",
+                    { className: "dsdr-actions" },
+                    h("span", { className: "dsdr-progress-value" }, progress && !progress.indeterminate ? Math.round(Number(progress.percent) || 0) + "%" : "…"),
+                    h("button", { type: "button", className: "dsdr-btn", onClick: cancelGeneration }, t("cancel", "取消")),
+                  ),
                 ),
                 h(
                   "div",
@@ -1290,7 +1467,14 @@ window.__ModuleLoader__.load({
             : null,
 
           loadError ? h("div", { className: "dsdr-error" }, loadError) : null,
-          error ? h("div", { className: "dsdr-error", role: "alert" }, error) : null,
+          error
+            ? h(
+                "div",
+                { className: "dsdr-error dsdr-error-row", role: "alert" },
+                h("span", null, error),
+                h("button", { type: "button", className: "dsdr-btn", onClick: () => generate() }, t("retry", "重试")),
+              )
+            : null,
 
           preview
             ? h(
@@ -1302,8 +1486,12 @@ window.__ModuleLoader__.load({
                   h(
                     "div",
                     null,
-                    h("div", { className: "dsdr-card-title" }, t("preview.title", "生成结果预览")),
-                    h("div", { className: "dsdr-card-desc" }, t("preview.desc", "先检查并编辑每日 AI 摘要、补充非代码工作，再导出 XLSX。")),
+                    h(
+                      "div",
+                      { className: "dsdr-title-with-info" },
+                      h("div", { className: "dsdr-card-title" }, t("preview.title", "生成结果预览")),
+                      h(InfoDot, { text: t("preview.desc", "先检查并编辑每日 AI 摘要、补充非代码工作，再导出 XLSX。") }),
+                    ),
                   ),
                   h(
                     "div",
@@ -1459,8 +1647,12 @@ window.__ModuleLoader__.load({
               h(
                 "div",
                 null,
-                h("div", { className: "dsdr-card-title" }, t("range.title", "汇总时间范围")),
-                h("div", { className: "dsdr-card-desc" }, t("range.desc", "默认当月月初到月底；可改为任意日期范围。")),
+                h(
+                  "div",
+                  { className: "dsdr-title-with-info" },
+                  h("div", { className: "dsdr-card-title" }, t("range.title", "汇总时间范围")),
+                  h(InfoDot, { text: t("range.desc", "默认当月月初到月底；可改为任意日期范围。") }),
+                ),
               ),
               h("div", { className: "dsdr-hint" }, rangeDays > 0 ? t("range.total", "共") + " " + rangeDays + " " + t("range.days", "天") : ""),
             ),
@@ -1494,6 +1686,8 @@ window.__ModuleLoader__.load({
               h(
                 "div",
                 { className: "dsdr-actions" },
+                h("button", { type: "button", className: "dsdr-btn", onClick: () => setRange(yesterdayRange()) }, t("range.yesterday", "昨天")),
+                h("button", { type: "button", className: "dsdr-btn", onClick: () => setRange(thisWeekRange()) }, t("range.thisWeek", "本周")),
                 h("button", { type: "button", className: "dsdr-btn", onClick: () => setRange(currentMonthRange()) }, t("range.thisMonth", "本月")),
                 h("button", { type: "button", className: "dsdr-btn", onClick: () => setRange(lastMonthRange()) }, t("range.lastMonth", "上月")),
                 h("button", { type: "button", className: "dsdr-btn", onClick: () => setRange(last7Range()) }, t("range.last7", "最近 7 天")),
@@ -1510,8 +1704,12 @@ window.__ModuleLoader__.load({
               h(
                 "div",
                 null,
-                h("div", { className: "dsdr-card-title" }, t("ai.title", "AI 分析")),
-                h("div", { className: "dsdr-card-desc" }, t("ai.desc", "使用当前默认模型分析提交说明、代码变更和文档摘要，生成按天简要总结。")),
+                h(
+                  "div",
+                  { className: "dsdr-title-with-info" },
+                  h("div", { className: "dsdr-card-title dsdr-ai-title" }, t("ai.title", "AI 分析")),
+                  h(InfoDot, { text: t("ai.desc", "使用当前默认模型分析提交说明、代码变更和文档摘要，生成按天简要总结。") }),
+                ),
               ),
               h(
                 "label",
@@ -1529,8 +1727,65 @@ window.__ModuleLoader__.load({
               "div",
               { className: "dsdr-hint" },
               aiInfo.available
-                ? t("ai.model", "当前模型：") + aiInfo.provider + "/" + aiInfo.model + " · " + t("ai.cost", "会增加生成时间和模型 token 消耗。")
+                ? t("ai.model", "当前模型：") +
+                  (settings.aiModel ? (settings.aiProvider ? settings.aiProvider + "/" : "") + settings.aiModel : aiInfo.provider + "/" + aiInfo.model) +
+                  " · " +
+                  t("ai.cost", "会增加生成时间和模型 token 消耗。")
                 : t("ai.unavailable", "当前没有可用的默认模型。"),
+            ),
+            h(
+              "div",
+              { className: "dsdr-ai-options" },
+              h(
+                "div",
+                { className: "dsdr-field" },
+                h("label", { className: "dsdr-label", htmlFor: "dsdr-ai-template" }, t("ai.template", "分析风格")),
+                h(
+                  "select",
+                  {
+                    id: "dsdr-ai-template",
+                    className: "dsdr-input",
+                    value: settings.aiTemplate || "concise",
+                    onChange: (event) => setSettings((previous) => ({ ...previous, aiTemplate: event.target.value })),
+                  },
+                  h("option", { value: "concise" }, t("ai.template.concise", "简洁")),
+                  h("option", { value: "detailed" }, t("ai.template.detailed", "详细")),
+                  h("option", { value: "manager" }, t("ai.template.manager", "管理汇报")),
+                ),
+              ),
+              h(
+                "div",
+                { className: "dsdr-field" },
+                h("label", { className: "dsdr-label", htmlFor: "dsdr-ai-model" }, t("ai.modelSelect", "模型")),
+                aiInfo.models && aiInfo.models.length > 0
+                  ? h(
+                      "select",
+                      {
+                        id: "dsdr-ai-model",
+                        className: "dsdr-input",
+                        value: settings.aiModel || "",
+                        onChange: (event) => {
+                          const selected = aiInfo.models.find((model) => model.id === event.target.value);
+                          setSettings((previous) => ({
+                            ...previous,
+                            aiProvider: selected ? selected.provider : "",
+                            aiModel: selected ? selected.id : "",
+                          }));
+                        },
+                      },
+                      h("option", { value: "" }, t("ai.defaultModel", "默认模型") + "（" + aiInfo.provider + "/" + aiInfo.model + "）"),
+                      aiInfo.models.map((model) =>
+                        h("option", { value: model.id, key: model.provider + "/" + model.id }, model.name || model.id),
+                      ),
+                    )
+                  : h("input", {
+                      id: "dsdr-ai-model",
+                      className: "dsdr-input",
+                      value: settings.aiModel || "",
+                      placeholder: t("ai.defaultModel", "默认模型"),
+                      onChange: (event) => setSettings((previous) => ({ ...previous, aiProvider: "", aiModel: event.target.value })),
+                    }),
+              ),
             ),
           ),
 
@@ -1543,8 +1798,150 @@ window.__ModuleLoader__.load({
               h(
                 "div",
                 null,
-                h("div", { className: "dsdr-card-title" }, t("git.title", "Git 仓库")),
-                h("div", { className: "dsdr-card-desc" }, t("git.desc", "支持远程地址或本地仓库；多个仓库、多个分支会合并到同一份日报。")),
+                h(
+                  "div",
+                  { className: "dsdr-title-with-info" },
+                  h("div", { className: "dsdr-card-title" }, t("schedule.title", "自动生成")),
+                  h(InfoDot, { text: t("schedule.desc", "在 DSH 运行期间按设定时间自动生成报告，并保存到本地历史目录。") }),
+                ),
+              ),
+              h(
+                "label",
+                { className: "dsdr-check" },
+                h("input", {
+                  type: "checkbox",
+                  checked: settings.scheduleEnabled === true,
+                  onChange: (event) => setSettings((previous) => ({ ...previous, scheduleEnabled: event.target.checked })),
+                }),
+                h("span", null, t("schedule.enable", "启用自动生成")),
+              ),
+            ),
+            h(
+              "div",
+              { className: "dsdr-ai-options" },
+              h(
+                "div",
+                { className: "dsdr-field" },
+                h("label", { className: "dsdr-label", htmlFor: "dsdr-schedule-frequency" }, t("schedule.title", "自动生成")),
+                h(
+                  "select",
+                  {
+                    id: "dsdr-schedule-frequency",
+                    className: "dsdr-input",
+                    value: settings.scheduleFrequency || "daily",
+                    onChange: (event) => setSettings((previous) => ({ ...previous, scheduleFrequency: event.target.value })),
+                  },
+                  h("option", { value: "daily" }, t("schedule.daily", "每天")),
+                  h("option", { value: "weekly" }, t("schedule.weekly", "每周一")),
+                ),
+              ),
+              h(
+                "div",
+                { className: "dsdr-field" },
+                h("label", { className: "dsdr-label", htmlFor: "dsdr-schedule-time" }, t("schedule.time", "生成时间")),
+                h("input", {
+                  id: "dsdr-schedule-time",
+                  className: "dsdr-input",
+                  type: "time",
+                  value: settings.scheduleTime || "18:30",
+                  onChange: (event) => setSettings((previous) => ({ ...previous, scheduleTime: event.target.value })),
+                }),
+              ),
+            ),
+            h("div", { className: "dsdr-hint" }, t("schedule.hint", "自动生成使用当前保存的数据源、AI 设置和格式。")),
+          ),
+
+          h(
+            "section",
+            { className: "dsdr-card dsdr-datasource-tabs" },
+            h(
+              "div",
+              { className: "dsdr-card-head" },
+              h(
+                "div",
+                null,
+                h(
+                  "div",
+                  { className: "dsdr-title-with-info" },
+                  h("div", { className: "dsdr-card-title" }, t("datasource.title", "数据源配置")),
+                  h(InfoDot, { text: t("datasource.desc", "统一管理 Git 仓库与本地文档，生成时合并到同一份日报。") }),
+                ),
+              ),
+              h(
+                "button",
+                { type: "button", className: "dsdr-btn", onClick: testSources, disabled: testingSources },
+                testingSources ? t("test.testing", "测试中…") : t("test.button", "测试数据源"),
+              ),
+            ),
+            h(
+              "div",
+              { className: "dsdr-tabs", role: "tablist" },
+              h(
+                "button",
+                {
+                  type: "button",
+                  role: "tab",
+                  "aria-selected": dataSourceTab === "git",
+                  className: "dsdr-tab" + (dataSourceTab === "git" ? " is-active" : ""),
+                  onClick: () => setDataSourceTab("git"),
+                },
+                t("datasource.git", "Git 仓库"),
+                h("span", { className: "dsdr-tab-count" }, String(settings.git.length)),
+              ),
+              h(
+                "button",
+                {
+                  type: "button",
+                  role: "tab",
+                  "aria-selected": dataSourceTab === "docs",
+                  className: "dsdr-tab" + (dataSourceTab === "docs" ? " is-active" : ""),
+                  onClick: () => setDataSourceTab("docs"),
+                },
+                t("datasource.docs", "本地文档"),
+                h("span", { className: "dsdr-tab-count" }, String(settings.docs.length)),
+              ),
+            ),
+            testError ? h("div", { className: "dsdr-error" }, testError) : null,
+            testResults && testResults.length > 0
+              ? h(
+                  "div",
+                  { className: "dsdr-test-results" },
+                  testResults.map((source, index) =>
+                    h(
+                      "div",
+                      { className: "dsdr-row", key: String(index) },
+                      h("span", { className: "dsdr-dot " + (source.status || "ok") }),
+                      h(
+                        "div",
+                        null,
+                        h("span", { className: "dsdr-source-name" }, source.label || source.location || "—"),
+                        h("span", { className: "dsdr-source-meta" }, " · " + (source.status === "error" ? t("status.error", "失败") : t("test.ok", "正常"))),
+                        h("div", { className: "dsdr-source-meta" }, source.message || ""),
+                      ),
+                    ),
+                  ),
+                )
+              : null,
+          ),
+
+          h(
+            "section",
+            {
+              className: "dsdr-card dsdr-datasource-panel",
+              style: { display: dataSourceTab === "git" ? undefined : "none" },
+            },
+            h(
+              "div",
+              { className: "dsdr-card-head" },
+              h(
+                "div",
+                null,
+                h(
+                  "div",
+                  { className: "dsdr-title-with-info" },
+                  h("div", { className: "dsdr-card-title" }, t("git.title", "Git 仓库")),
+                  h(InfoDot, { text: t("git.desc", "支持远程地址或本地仓库；多个仓库、多个分支会合并到同一份日报。") }),
+                ),
               ),
               h(
                 "div",
@@ -1566,7 +1963,30 @@ window.__ModuleLoader__.load({
                 }),
                 h("span", null, t("git.mine", "仅统计我的提交")),
               ),
-              h("span", { className: "dsdr-hint" }, t("git.mineHint", "按各仓库 git config user.email / user.name 过滤")),
+              h(
+                "label",
+                { className: "dsdr-check" },
+                h("input", {
+                  type: "checkbox",
+                  checked: settings.excludeMerges !== false,
+                  onChange: (event) => setSettings((previous) => ({ ...previous, excludeMerges: event.target.checked })),
+                }),
+                h("span", null, t("git.excludeMerges", "排除 merge commit")),
+              ),
+              settings.mineOnly !== false
+                ? h(
+                    "div",
+                    { className: "dsdr-field dsdr-filter-author" },
+                    h("label", { className: "dsdr-label", htmlFor: "dsdr-author-emails" }, t("git.authorEmails", "作者邮箱（可选）")),
+                    h("input", {
+                      id: "dsdr-author-emails",
+                      className: "dsdr-input",
+                      value: settings.authorEmails || "",
+                      placeholder: t("git.authorEmailsHint", "留空自动读取各仓库 git config；多个邮箱用逗号分隔"),
+                      onChange: (event) => setSettings((previous) => ({ ...previous, authorEmails: event.target.value })),
+                    }),
+                  )
+                : null,
             ),
             showScan
               ? h(
@@ -1649,15 +2069,22 @@ window.__ModuleLoader__.load({
 
           h(
             "section",
-            { className: "dsdr-card" },
+            {
+              className: "dsdr-card dsdr-datasource-panel",
+              style: { display: dataSourceTab === "docs" ? undefined : "none" },
+            },
             h(
               "div",
               { className: "dsdr-card-head" },
               h(
                 "div",
                 null,
-                h("div", { className: "dsdr-card-title" }, t("docs.title", "本地文档")),
-                h("div", { className: "dsdr-card-desc" }, t("docs.desc", "文件或目录；目录会递归扫描 md、txt、docx、html 等笔记文件。")),
+                h(
+                  "div",
+                  { className: "dsdr-title-with-info" },
+                  h("div", { className: "dsdr-card-title" }, t("docs.title", "本地文档")),
+                  h(InfoDot, { text: t("docs.desc", "文件或目录；目录会递归扫描 md、txt、docx、html 等笔记文件。") }),
+                ),
               ),
               h(
                 "div",

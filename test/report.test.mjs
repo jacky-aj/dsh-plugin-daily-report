@@ -65,6 +65,20 @@ const result = await collectReport({
 assert.equal(result.stats.days, 30);
 assert.equal(result.stats.commits, 3);
 assert.equal(result.commits.every((commit) => commit.email === "yuanjie@example.com"), true);
+
+const otherAuthorResult = await collectReport({
+  settings: { git: [{ location: repo, branch: "main", label: "核心系统" }], docs: [] },
+  start: "2026-11-01",
+  end: "2026-11-30",
+  cwd: root,
+  homeDir: home,
+  locale: "zh",
+  mineOnly: true,
+  authorEmails: ["other@example.com"],
+  now: new Date("2026-11-09T12:00:00+08:00"),
+});
+assert.equal(otherAuthorResult.stats.commits, 1);
+assert.equal(otherAuthorResult.commits[0].email, "other@example.com");
 assert.equal(result.stats.docs, 3);
 assert.equal(result.stats.activeDays, 3);
 assert.equal(result.stats.sources, 2);
