@@ -60,10 +60,10 @@
 .dsdr-check.is-disabled input { cursor: not-allowed; }
 .dsdr-switch { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
 .dsdr-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
-.dsdr-switch-track { position: relative; width: 40px; height: 22px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 999px; background: var(--dsw-alias-bg-layer-2); transition: background .18s ease, border-color .18s ease; }
-.dsdr-switch-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--dsw-alias-label-secondary); transition: transform .18s ease, background .18s ease; }
-.dsdr-switch input:checked + .dsdr-switch-track { background: #146b5a; border-color: #146b5a; }
-.dsdr-switch input:checked + .dsdr-switch-track .dsdr-switch-thumb { transform: translateX(18px); background: #ffffff; }
+.dsdr-switch-track { position: relative; width: 44px; height: 24px; border: 0; border-radius: 999px; background: var(--dsw-alias-bg-layer-2); box-shadow: inset 0 0 0 1px var(--dsw-alias-border-l2); transition: background .18s ease, box-shadow .18s ease; }
+.dsdr-switch-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, .28); transition: transform .18s ease, background .18s ease; }
+.dsdr-switch input:checked + .dsdr-switch-track { background: #146b5a; box-shadow: inset 0 0 0 1px #146b5a; }
+.dsdr-switch input:checked + .dsdr-switch-track .dsdr-switch-thumb { transform: translateX(20px); background: #ffffff; }
 .dsdr-switch input:focus-visible + .dsdr-switch-track { outline: 2px solid #146b5a; outline-offset: 2px; }
 .dsdr-switch.is-disabled { opacity: .55; cursor: not-allowed; }
 .dsdr-switch.is-disabled input { cursor: not-allowed; }
@@ -160,4 +160,8 @@
 .dsdr-confirm { background: #1f2328; color: #f5f7fa; border-color: rgba(255, 255, 255, .16); }
 .dsdr-confirm-title { color: #f5f7fa; }
 .dsdr-confirm-message { color: #c9d1d9; }
+
+
+.dsdr-confirm { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+.dsdr-confirm-panel { width: 100%; background: #1f2328 !important; color: #f5f7fa; }
 

@@ -6,7 +6,7 @@
 
 `dsh-plugin-daily-report`：DSH 日报插件。汇总多个 Git 仓库、分支和本地文档，生成按天日报，支持 AI 分析、预览编辑和 XLSX / Markdown / CSV / HTML 导出。
 
-当前版本：`1.1.0`（已发布 npm）。
+当前版本：`1.1.1`。
 仓库：`https://gitee.com/yuanjiegit/dsh-plugin-daily-report`
 
 ## 每次会话开始
@@ -62,8 +62,8 @@ src/client/
   components/            基础组件和确认框
   views/                 页面区块
   styles.css             页面样式
-locale/page.zh.json      页面中文文案
-locale/page.en.json      页面英文文案
+client-locale/page.zh.json      页面中文文案
+client-locale/page.en.json      页面英文文案
 test/unit/               Vitest 单测
 test/integration/        Vitest 集成测试
 ```
@@ -75,7 +75,7 @@ test/integration/        Vitest 集成测试
 - 页面开关类事件如果 `await confirm(...)`，必须在 `await` 前保存 `event.target.checked`。
 - 重要但低频的操作才加二次确认，高频低风险操作不要加。
 - 修改 CSS 时注意选择器顺序和优先级；通用 `.dsdr-btn` 可能覆盖专用类。
-- 页面文案优先使用 `t(key, fallback)`，新增文案同步 `locale/page.zh.json` 和 `locale/page.en.json`。
+- 页面文案优先使用 `t(key, fallback)`，新增文案同步 `client-locale/page.zh.json` 和 `client-locale/page.en.json`。
 - 发布前必须运行 `npm run check`。
 
 ## 常见坑
@@ -94,3 +94,5 @@ test/integration/        Vitest 集成测试
 3. 行为变化更新 `CHANGELOG.md`。
 4. 架构取舍变化新增 `docs/decisions/NNNN-*.md`。
 5. 不主动提交或发布。
+
+

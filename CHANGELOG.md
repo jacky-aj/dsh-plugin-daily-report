@@ -1,17 +1,21 @@
 # Changelog
 
-## Unreleased
+## 1.1.1 - 2026-11-12
 
 ### Added
 
 - 重要操作二次确认：删除数据源、关闭 AI、切换模型、导入设置、启用定时生成
 - 中英文确认文案
 - 确认框组件与 `useConfirm` Hook
+- 项目长期记忆文档：`AGENTS.md`、`docs/`
 
 ### Fixed
 
+- 页面语言文件移出 `locale/`，修复 DSH 插件元数据 “must use a language id as its filename”
+- 开关组件调整为更接近 DSH 官方页面的 44×24 轨道和白色滑块
 - 异步确认后受控开关状态不生效
 - 确认框透明背景
+- 侧边栏标题在词典加载前显示 `panel.title`
 - 分体按钮右侧下拉区域左上/左下圆角导致的衔接问题
 
 ### Changed
@@ -35,6 +39,6 @@
 
 ## 1.0.6
 
-### Fixed
-
+### Fixed\n\n- 页面语言文件移出 `locale/`，修复 DSH 插件元数据 “must use a language id as its filename”\n- 开关组件调整为更接近 DSH 官方页面的 44×24 轨道和白色滑块\n
 - 使用浏览器可访问的 Gitee 仓库地址
+

@@ -5,12 +5,12 @@
 ## 版本
 
 ```text
-版本号：1.1.0
-npm：已发布 1.1.0
-最新提交：78aab4d test: migrate integration suites to Vitest
+版本号：1.1.1
+npm：已发布 1.1.1
+最新提交：本次 1.1.1 发布提交
 ```
 
-注意：1.1.0 发布之后又有“重要操作二次确认”相关改动，目前工作区未提交、未重新发布。
+当前 npm latest：1.1.1。
 
 ## 当前状态
 
@@ -37,8 +37,7 @@ Vitest tests：63 passed
 - Vitest 单测和集成测试
 - 测试目录整理：unit / integration / fixtures
 - 重要操作二次确认
-- 确认框透明背景修复
-- 异步确认后复选框状态不生效修复
+- 确认框透明背景修复\n- 页面语言文件移出 `locale/`，修复 DSH 插件元数据语言文件名校验错误\n- 开关组件样式对齐 DSH 官方页面\n- 异步确认后复选框状态不生效修复
 
 ## 已知问题
 
@@ -46,7 +45,6 @@ Vitest tests：63 passed
 - `lib/ai.js`、`lib/collect.js` 的失败分支覆盖率偏低。
 - `test/integration/render.spec.mjs` 依赖 `useState` 调用顺序，新增 Hook 后需要调整索引。
 - 确认框使用内联背景色，后续如果接入完整主题系统需要重新评估。
-- 当前已发布的 npm 1.1.0 不包含二次确认改动。
 
 ## 下一步建议
 
@@ -59,3 +57,6 @@ Vitest tests：63 passed
 2. 继续提升 Host 路由和 lib 失败分支覆盖率。
 3. 评估是否把 `test/integration/render.spec.mjs` 改为更稳定的状态注入方式。
 4. 为确认框补充键盘 Esc / 焦点管理。
+
+
+

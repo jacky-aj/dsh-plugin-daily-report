@@ -36,8 +36,8 @@
 
 - 页面文案使用 `t(key, fallback)`。
 - 新增 key 同时更新：
-  - `locale/page.zh.json`
-  - `locale/page.en.json`
+  - `client-locale/page.zh.json`
+  - `client-locale/page.en.json`
 - Host 文案变更同时更新：
   - `lib/locales/zh.js`
   - `lib/locales/en.js`
@@ -65,3 +65,4 @@
 - 行为变化更新 `docs/state.md` 和 `CHANGELOG.md`。
 - 架构取舍新增 `docs/decisions/NNNN-*.md`。
 - 不把完整聊天记录写入仓库。
+

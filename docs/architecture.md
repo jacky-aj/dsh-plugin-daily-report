@@ -138,7 +138,7 @@ src/client/hooks/useConfirm.js
 ## 7. i18n
 
 - Host 文案：`lib/locales/zh.js`、`lib/locales/en.js`
-- 页面文案：`locale/page.zh.json`、`locale/page.en.json`
+- 页面文案：`client-locale/page.zh.json`、`client-locale/page.en.json`
 - Client 通过 `/daily-report/locales` 获取页面词典。
 - 组件中使用 `t(key, fallback)`。
 
@@ -159,3 +159,4 @@ index.js
 ```
 
 详见 `docs/testing.md`。
+

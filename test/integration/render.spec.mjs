@@ -4,8 +4,8 @@ import { test } from "vitest";
 
 test("render integration", async () => {
 
-const pageZh = JSON.parse(readFileSync(new URL("../../locale/page.zh.json", import.meta.url), "utf8"));
-const pageEn = JSON.parse(readFileSync(new URL("../../locale/page.en.json", import.meta.url), "utf8"));
+const pageZh = JSON.parse(readFileSync(new URL("../../client-locale/page.zh.json", import.meta.url), "utf8"));
+const pageEn = JSON.parse(readFileSync(new URL("../../client-locale/page.en.json", import.meta.url), "utf8"));
 const fetchCalls = [];
 globalThis.fetch = async (url) => {
   fetchCalls.push(String(url));
@@ -302,6 +302,7 @@ console.log(JSON.stringify({ ok: true, root: root.props.className, title: dictio
 
 
 });
+
 
 
 

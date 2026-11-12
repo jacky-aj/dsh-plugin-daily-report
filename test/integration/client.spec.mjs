@@ -4,8 +4,8 @@ import { test } from "vitest";
 
 test("client integration", async () => {
 
-const pageZh = JSON.parse(readFileSync(new URL("../../locale/page.zh.json", import.meta.url), "utf8"));
-const pageEn = JSON.parse(readFileSync(new URL("../../locale/page.en.json", import.meta.url), "utf8"));
+const pageZh = JSON.parse(readFileSync(new URL("../../client-locale/page.zh.json", import.meta.url), "utf8"));
+const pageEn = JSON.parse(readFileSync(new URL("../../client-locale/page.en.json", import.meta.url), "utf8"));
 globalThis.fetch = async () => ({ ok: true, json: async () => ({ zh: pageZh, en: pageEn }) });
 
 const code = readFileSync(new URL("../../client.js", import.meta.url), "utf8");
@@ -102,3 +102,4 @@ console.log(JSON.stringify({ ok: true, slots: registrations.map((item) => item.o
 
 
 });
+

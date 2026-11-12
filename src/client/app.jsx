@@ -332,6 +332,20 @@ export function apply(ctx) {
     };
   }, "daily-report: locale");
   const t = ctx.locale.bind(NS);
+  const panelTitle = () => {
+    const value = t("panel.title");
+    if (value && value !== "panel.title") return value;
+    let localeId = "zh";
+    try {
+      const current = ctx.locale.getLocale();
+      localeId = typeof current === "string" ? current : current?.id || "zh";
+    } catch {
+      localeId = "zh";
+    }
+    return String(localeId).toLowerCase().startsWith("en")
+      ? "Daily report"
+      : "日报汇总";
+  };
   ctx.slots.inject("main", () =>
     ctx.slots.register(
       {
@@ -347,7 +361,7 @@ export function apply(ctx) {
         name: "sidebar.panellist",
         id: "daily-report",
         order: 20,
-        label: () => t("panel.title"),
+        label: panelTitle,
       },
       (props) => <PanelIcon {...props} />,
     ),

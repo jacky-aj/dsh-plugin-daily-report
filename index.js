@@ -749,8 +749,8 @@ export function apply(ctx) {
       }
       try {
         const [zh, en] = await Promise.all([
-          fs.readFile(join(PACKAGE_ROOT, "locale", "page.zh.json"), "utf8"),
-          fs.readFile(join(PACKAGE_ROOT, "locale", "page.en.json"), "utf8"),
+          fs.readFile(join(PACKAGE_ROOT, "client-locale", "page.zh.json"), "utf8"),
+          fs.readFile(join(PACKAGE_ROOT, "client-locale", "page.en.json"), "utf8"),
         ]);
         res.setHeader("cache-control", "no-store");
         return sendJson(res, 200, { zh: JSON.parse(zh), en: JSON.parse(en) });
@@ -1197,5 +1197,6 @@ export function apply(ctx) {
   registerTool(ctx);
   startScheduler(ctx);
 }
+
 
 
