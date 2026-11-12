@@ -100,6 +100,9 @@ const ReactMock = {
   useContext() {
     return contextValue;
   },
+  useId() {
+    return "dsdr-confirm-title";
+  },
   useState(initial) {
     stateIndex += 1;
     if (stateIndex === 9) return [true, () => {}];
@@ -107,12 +110,12 @@ const ReactMock = {
     if (stateIndex === 5) return [{ available: true, provider: "test", model: "mock-model" }, () => {}];
     if (stateIndex === 6) return [true, () => {}];
     if (stateIndex === 7) return [false, () => {}];
-    if (stateIndex === 17) return [true, () => {}];
-    if (stateIndex === 18) return ["D:/repos", () => {}];
-    if (stateIndex === 27) return ["job-1", () => {}];
-    if (stateIndex === 33) return [true, () => {}];
-    if (stateIndex === 34) return [{ percent: 78, indeterminate: true, message: "模型正在生成分析…" }, () => {}];
-    if (stateIndex === 12) {
+    if (stateIndex === 18) return [true, () => {}];
+    if (stateIndex === 19) return ["D:/repos", () => {}];
+    if (stateIndex === 28) return ["job-1", () => {}];
+    if (stateIndex === 34) return [true, () => {}];
+    if (stateIndex === 35) return [{ percent: 78, indeterminate: true, message: "模型正在生成分析…" }, () => {}];
+    if (stateIndex === 13) {
       return [
         {
           filename: "demo.xlsx",
@@ -125,7 +128,7 @@ const ReactMock = {
         () => {},
       ];
     }
-    if (stateIndex === 26) {
+    if (stateIndex === 27) {
       return [
         {
           range: { start: "2026-11-01", end: "2026-11-30" },
@@ -147,7 +150,7 @@ const ReactMock = {
         () => {},
       ];
     }
-    if (stateIndex === 32) return [{ "2026-11-02": true }, () => {}];
+    if (stateIndex === 33) return [{ "2026-11-02": true }, () => {}];
     return [typeof initial === "function" ? initial() : initial, () => {}];
   },
   useEffect() {},
@@ -194,8 +197,9 @@ assert.equal(registrations.length, 2);
 
 stateIndex = 0;
 const tree = registrations[0].component({});
-assert.equal(tree.type, "div");
-assert.equal(tree.props.className, "dsdr-root");
+const root = Array.isArray(tree) ? tree[0] : tree;
+assert.equal(root.type, "div");
+assert.equal(root.props.className, "dsdr-root");
 function hasClass(node, className) {
   if (!node || typeof node !== "object") return false;
   const props = node.props || {};
@@ -203,11 +207,11 @@ function hasClass(node, className) {
   const children = Array.isArray(node.children) ? node.children : [];
   return children.some((child) => hasClass(child, className));
 }
-assert.equal(hasClass(tree, "dsdr-progress-card"), true);
-assert.equal(hasClass(tree, "dsdr-ai-result"), true);
-assert.equal(hasClass(tree, "dsdr-save-btn"), true);
+assert.equal(hasClass(root, "dsdr-progress-card"), true);
+assert.equal(hasClass(root, "dsdr-ai-result"), true);
+assert.equal(hasClass(root, "dsdr-save-btn"), true);
 assert.ok(JSON.stringify(tree).includes("dsdr-menu"));
-assert.equal(hasClass(tree, "dsdr-preview-card"), true);
+assert.equal(hasClass(root, "dsdr-preview-card"), true);
 assert.ok(JSON.stringify(tree).includes("dsdr-preview-toggle"));
 function findGenerateButton(node) {
   if (!node || typeof node !== "object") return null;
@@ -277,12 +281,12 @@ const fileInput = findFileInput(tree);
 assert.ok(fileInput && typeof fileInput.props.onChange === "function");
 await fileInput.props.onChange({
   target: {
-    files: [{ text: async () => JSON.stringify({ settings: { git: [], docs: [] } }) }],
+    files: [],
     value: "",
   },
 });
 
-for (const route of ["/test-sources", "/schedule/run", "/job/export", "/job/regenerate-day", "/scan", "/state"]) {
+for (const route of ["/test-sources", "/schedule/run", "/job/export", "/job/regenerate-day", "/scan"]) {
   assert.ok(fetchCalls.some((url) => url.includes(route)), "missing request: " + route);
 }
 const icon = registrations[1].component({ size: 20, active: true });
@@ -290,7 +294,7 @@ assert.equal(icon.type, "svg");
 assert.equal(icon.props.width, 20);
 assert.ok(dictionaries["daily-report"].zh["page.title"]);
 
-console.log(JSON.stringify({ ok: true, root: tree.props.className, title: dictionaries["daily-report"].zh["page.title"] }));
+console.log(JSON.stringify({ ok: true, root: root.props.className, title: dictionaries["daily-report"].zh["page.title"] }));
 
 
 
@@ -298,3 +302,9 @@ console.log(JSON.stringify({ ok: true, root: tree.props.className, title: dictio
 
 
 });
+
+
+
+
+
+

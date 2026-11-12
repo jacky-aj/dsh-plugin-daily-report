@@ -13,6 +13,7 @@ export function useSettingsTransfer({
   loading,
   setError,
   setSettingsMenuOpen,
+  confirm = async () => true,
   t,
 }) {
   const [saveState, setSaveState] = React.useState("idle");
@@ -131,6 +132,16 @@ export function useSettingsTransfer({
       const nextFormat = FORMAT_OPTIONS.includes(source.format)
         ? source.format
         : "xlsx";
+      const accepted = await confirm({
+        title: t("confirm.importSettings.title", "导入设置？"),
+        message: t(
+          "confirm.importSettings.message",
+          "当前数据源、AI、日期范围和导出格式将被导入内容覆盖。",
+        ),
+        confirmLabel: t("confirm.import", "导入"),
+        cancelLabel: t("confirm.cancel", "取消"),
+      });
+      if (!accepted) return;
       setSettings(imported);
       setUseAi(nextAi);
       setRange(nextRange);

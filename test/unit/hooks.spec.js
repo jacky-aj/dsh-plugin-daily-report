@@ -51,7 +51,7 @@ describe("ESM hooks", () => {
     expect(result.current.range.start).toBe("2026-11-01");
   });
 
-  it("updates and removes data sources", () => {
+  it("updates and removes data sources", async () => {
     const setSettings = vi.fn();
     const { result } = renderHook(() =>
       useDataSources({
@@ -68,8 +68,28 @@ describe("ESM hooks", () => {
     );
     act(() => result.current.addGit());
     expect(setSettings).toHaveBeenCalled();
-    act(() => result.current.removeGit(0));
+    await act(async () => result.current.removeGit(0));
     expect(setSettings).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps a data source when removal is cancelled", async () => {
+    const setSettings = vi.fn();
+    const { result } = renderHook(() =>
+      useDataSources({
+        settings: { git: [{ location: "D:/repo", branch: "main", label: "repo" }], docs: [] },
+        setSettings,
+        useAi: false,
+        range: { start: "2026-11-01", end: "2026-11-30" },
+        exportFormat: "xlsx",
+        sessionId: "",
+        ctx: {},
+        t,
+        errorMessageFromPayload: () => "error",
+        confirm: async () => false,
+      }),
+    );
+    await act(async () => result.current.removeGit(0));
+    expect(setSettings).not.toHaveBeenCalled();
   });
 
   it("tests and scans data sources", async () => {

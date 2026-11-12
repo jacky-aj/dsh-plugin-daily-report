@@ -19,6 +19,16 @@
 
 ---
 
+## 项目文档
+
+- [AGENTS.md](AGENTS.md)：模型进入项目时的入口和硬性约定
+- [docs/state.md](docs/state.md)：当前状态、已知问题和下一步
+- [docs/architecture.md](docs/architecture.md)：Host / Client 架构和数据流
+- [docs/conventions.md](docs/conventions.md)：代码、CSS、i18n、发布约定
+- [docs/testing.md](docs/testing.md)：测试和覆盖率规则
+- [docs/decisions/](docs/decisions/)：架构决策记录
+- [CHANGELOG.md](CHANGELOG.md)：版本变更
+
 ## 解决你的需求
 
 - **月底不知道自己干了哪些活？**

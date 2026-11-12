@@ -14,7 +14,7 @@
 .dsdr-save-split .dsdr-save-btn:first-child { border-radius: 8px 0 0 8px; }
 .dsdr-save-split .dsdr-split-toggle { border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255, 255, 255, .25); background: #3b4046; border-color: #3b4046; }
 .dsdr-save-split .dsdr-split-toggle:hover { background: #292d31; border-color: #292d31; }
-.dsdr-split-toggle { min-height: 38px; padding: 0 9px; border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255, 255, 255, .32); }
+.dsdr-split > .dsdr-split-toggle { min-height: 38px; padding: 0 9px; border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255, 255, 255, .32); }
 .dsdr-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; min-width: 190px; padding: 5px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 10px; background: var(--dsw-alias-bg-overlay); box-shadow: 0 10px 28px rgba(0, 0, 0, .2); }
 .dsdr-menu-title { padding: 5px 8px 4px; color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }
 .dsdr-menu-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 7px 8px; border: 0; border-radius: 7px; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; line-height: 18px; text-align: left; cursor: pointer; }
@@ -139,3 +139,25 @@
 .dsdr-footer { color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 17px; }
 .dsdr-spacer { flex: 1; }
 @media (max-width: 780px) { .dsdr-page { padding: 20px 16px 40px; } .dsdr-hero-action { flex: 1 0 100%; width: 100%; align-items: stretch; margin-left: 0; } .dsdr-hero-buttons { width: 100%; } .dsdr-hero-buttons .dsdr-btn { flex: 1; } .dsdr-split { flex: 1; } .dsdr-split .dsdr-generate { flex: 1; } .dsdr-generate { width: 100%; } .dsdr-ai-options { grid-template-columns: 1fr; } .dsdr-range { grid-template-columns: 1fr 1fr; } .dsdr-range .dsdr-actions { grid-column: 1 / -1; } .dsdr-stats { grid-template-columns: 1fr 1fr; } .dsdr-scan-row { grid-template-columns: 1fr; } .dsdr-manual-add { grid-template-columns: 1fr; } .dsdr-source, .dsdr-source-docs { grid-template-columns: 1fr; } .dsdr-source .dsdr-icon-btn { justify-self: end; } }
+
+.dsdr-confirm-backdrop { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, .38); }
+.dsdr-confirm { width: min(400px, 100%); box-sizing: border-box; padding: 18px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 12px; background: var(--dsw-alias-bg-overlay); box-shadow: 0 18px 48px rgba(0, 0, 0, .28); }
+.dsdr-confirm-title { margin: 0 0 8px; font-size: 15px; line-height: 22px; }
+.dsdr-confirm-message { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 19px; white-space: pre-wrap; }
+.dsdr-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+
+.dsdr-confirm .dsdr-btn-danger { background: #b42318; border-color: #b42318; color: #ffffff; }
+.dsdr-confirm .dsdr-btn-danger:hover { background: #912018; border-color: #912018; }
+
+
+.dsdr-confirm-backdrop { pointer-events: auto; background: rgba(0, 0, 0, .5); }
+.dsdr-confirm { pointer-events: auto; background: var(--dsw-alias-bg-overlay, var(--dsw-alias-bg-base, #ffffff)); color: var(--dsw-alias-label-primary, #1f2328); }
+.dsdr-confirm .dsdr-btn { pointer-events: auto; }
+
+
+
+.dsdr-confirm { background: #1f2328; color: #f5f7fa; border-color: rgba(255, 255, 255, .16); }
+.dsdr-confirm-title { color: #f5f7fa; }
+.dsdr-confirm-message { color: #c9d1d9; }
+

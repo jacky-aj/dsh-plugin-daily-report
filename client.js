@@ -43,7 +43,7 @@ var __DSH_DAILY_REPORT__ = (() => {
   });
 
   // src/client/app.jsx
-  var import_react20 = __toESM(__require("react"), 1);
+  var import_react22 = __toESM(__require("react"), 1);
 
   // src/client/helpers.js
   var import_react = __toESM(__require("react"), 1);
@@ -233,7 +233,7 @@ var __DSH_DAILY_REPORT__ = (() => {
   }
 
   // raw:E:\myproject\dsh-plugin-daily-report\src\client\styles.css
-  var styles_default = ".dsdr-root { height: 100%; overflow: auto; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); }\n.dsdr-page { box-sizing: border-box; max-width: 1080px; margin: 0 auto; padding: 28px 28px 56px; display: flex; flex-direction: column; gap: 16px; }\n.dsdr-hero { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 14px; }\n.dsdr-hero-copy { flex: 1; min-width: 0; }\n.dsdr-hero-action { display: flex; flex: none; flex-direction: column; align-items: flex-end; gap: 5px; margin-left: auto; }\n.dsdr-hero-buttons { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }\n.dsdr-save-btn { min-height: 38px; background: #3b4046; border-color: #3b4046; color: #ffffff; font-weight: 600; }\n.dsdr-save-btn:hover { background: #292d31; border-color: #292d31; }\n.dsdr-save-btn:disabled { background: #666b70; border-color: #666b70; color: #ffffff; opacity: .8; }\n.dsdr-generate { min-height: 38px; padding: 9px 16px; font-size: 13px; white-space: nowrap; }\n.dsdr-btn-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }\n.dsdr-split { position: relative; display: inline-flex; align-items: stretch; }\n.dsdr-split .dsdr-generate { border-radius: 8px 0 0 8px; }\n.dsdr-save-split .dsdr-save-btn:first-child { border-radius: 8px 0 0 8px; }\n.dsdr-save-split .dsdr-split-toggle { border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255, 255, 255, .25); background: #3b4046; border-color: #3b4046; }\n.dsdr-save-split .dsdr-split-toggle:hover { background: #292d31; border-color: #292d31; }\n.dsdr-split-toggle { min-height: 38px; padding: 0 9px; border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255, 255, 255, .32); }\n.dsdr-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; min-width: 190px; padding: 5px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 10px; background: var(--dsw-alias-bg-overlay); box-shadow: 0 10px 28px rgba(0, 0, 0, .2); }\n.dsdr-menu-title { padding: 5px 8px 4px; color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }\n.dsdr-menu-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 7px 8px; border: 0; border-radius: 7px; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; line-height: 18px; text-align: left; cursor: pointer; }\n.dsdr-menu-item:hover { background: var(--dsw-alias-bg-layer-2); }\n.dsdr-menu-item.is-active { background: var(--dsw-alias-bg-layer-2); font-weight: 600; }\n.dsdr-menu-item-start { justify-content: flex-start; gap: 9px; }\n.dsdr-menu-check { width: 14px; color: #146b5a; text-align: center; }\n.dsdr-save { color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }\n.dsdr-mark { flex: none; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; background: var(--dsw-alias-bg-layer-2); border: 1px solid var(--dsw-alias-border-l1); }\n.dsdr-title { margin: 0; font-size: 22px; line-height: 30px; font-weight: 600; }\n.dsdr-sub { margin: 2px 0 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; }\n.dsdr-card { border: 1px solid var(--dsw-alias-border-l1); border-radius: 12px; background: var(--dsw-alias-bg-layer-1); padding: 16px 18px; }\n.dsdr-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }\n.dsdr-card-title { font-size: 14px; line-height: 22px; font-weight: 600; }\n.dsdr-ai-title { display: inline-block; font-size: 15px; font-weight: 700; letter-spacing: .03em; background: linear-gradient(100deg, #0f766e 0%, #06b6d4 22%, #3b82f6 46%, #8b5cf6 70%, #0f766e 100%); background-size: 320% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 7px rgba(20, 184, 166, .22)); animation: dsdr-ai-gradient 5s ease-in-out infinite; }\n@keyframes dsdr-ai-gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }\n@media (prefers-reduced-motion: reduce) { .dsdr-ai-title { animation: none; } }\n.dsdr-card-desc { margin-top: 2px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-title-with-info { display: flex; align-items: center; gap: 6px; min-width: 0; }\n.dsdr-info { position: relative; display: inline-flex; flex: none; align-items: center; justify-content: center; width: 15px; height: 15px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 50%; color: var(--dsw-alias-label-secondary); font-family: Georgia, serif; font-size: 10px; font-style: italic; font-weight: 700; line-height: 1; cursor: help; }\n.dsdr-info:hover, .dsdr-info:focus-visible { border-color: #146b5a; color: #146b5a; outline: none; }\n.dsdr-info::after { content: attr(data-tip); position: absolute; top: calc(100% + 8px); left: 50%; z-index: 80; width: max-content; max-width: 280px; padding: 7px 9px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: var(--dsw-alias-bg-overlay); color: var(--dsw-alias-label-primary); box-shadow: 0 7px 20px rgba(0, 0, 0, .2); font-family: inherit; font-size: 11px; font-style: normal; font-weight: 400; line-height: 17px; text-align: left; white-space: normal; opacity: 0; visibility: hidden; transform: translate(-50%, -3px); transition: opacity .15s ease, transform .15s ease, visibility .15s ease; pointer-events: none; }\n.dsdr-info:hover::after, .dsdr-info:focus-visible::after { opacity: 1; visibility: visible; transform: translate(-50%, 0); }\n.dsdr-range { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; }\n.dsdr-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }\n.dsdr-label { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-input { box-sizing: border-box; width: 100%; height: 32px; padding: 4px 9px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font: inherit; font-size: 13px; }\n.dsdr-input:focus { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }\n.dsdr-input::placeholder { color: var(--dsw-alias-label-secondary); opacity: .75; }\n.dsdr-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }\n.dsdr-btn { box-sizing: border-box; border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px; background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; font-weight: 500; line-height: 20px; padding: 5px 11px; cursor: pointer; }\n.dsdr-btn:hover { background: var(--dsw-alias-bg-layer-1); border-color: var(--dsw-alias-brand-primary); }\n.dsdr-btn:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }\n.dsdr-btn:disabled { opacity: .7; cursor: not-allowed; }\n.dsdr-btn-primary { background: #146b5a; border-color: #146b5a; color: #ffffff; font-weight: 600; box-shadow: 0 2px 6px rgba(0, 0, 0, .18); }\n.dsdr-btn-primary:hover { background: #0f5547; border-color: #0f5547; opacity: 1; }\n.dsdr-btn-primary:disabled { background: #6b8a82; border-color: #6b8a82; color: #ffffff; opacity: .8; }\n.dsdr-btn-danger { border-color: transparent; background: transparent; color: var(--dsw-alias-state-error-primary); font-weight: 600; }\n.dsdr-btn-danger:hover { background: var(--dsw-alias-bg-layer-2); border-color: transparent; }\n.dsdr-check { display: inline-flex; align-items: center; gap: 7px; color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 20px; cursor: pointer; white-space: nowrap; }\n.dsdr-check input { width: 15px; height: 15px; margin: 0; accent-color: #15557f; cursor: pointer; }\n.dsdr-check.is-disabled { color: var(--dsw-alias-label-secondary); cursor: not-allowed; opacity: .7; }\n.dsdr-check.is-disabled input { cursor: not-allowed; }\n.dsdr-switch { position: relative; display: inline-flex; align-items: center; cursor: pointer; }\n.dsdr-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }\n.dsdr-switch-track { position: relative; width: 40px; height: 22px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 999px; background: var(--dsw-alias-bg-layer-2); transition: background .18s ease, border-color .18s ease; }\n.dsdr-switch-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--dsw-alias-label-secondary); transition: transform .18s ease, background .18s ease; }\n.dsdr-switch input:checked + .dsdr-switch-track { background: #146b5a; border-color: #146b5a; }\n.dsdr-switch input:checked + .dsdr-switch-track .dsdr-switch-thumb { transform: translateX(18px); background: #ffffff; }\n.dsdr-switch input:focus-visible + .dsdr-switch-track { outline: 2px solid #146b5a; outline-offset: 2px; }\n.dsdr-switch.is-disabled { opacity: .55; cursor: not-allowed; }\n.dsdr-switch.is-disabled input { cursor: not-allowed; }\n.dsdr-progress-card { display: flex; flex-direction: column; gap: 7px; }\n.dsdr-progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 12px; line-height: 18px; color: var(--dsw-alias-label-primary); }\n.dsdr-progress-value { flex: none; color: var(--dsw-alias-label-secondary); font-variant-numeric: tabular-nums; }\n.dsdr-progress-track { height: 6px; overflow: hidden; border-radius: 999px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-progress-fill { height: 100%; border-radius: 999px; background: #15557f; transition: width .3s ease; }\n.dsdr-progress-track.is-indeterminate .dsdr-progress-fill { width: 35% !important; animation: dsdr-progress 1.2s ease-in-out infinite; }\n@keyframes dsdr-progress { 0% { transform: translateX(-110%); } 100% { transform: translateX(320%); } }\n.dsdr-ai-result { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-preview-overall { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }\n.dsdr-textarea { box-sizing: border-box; width: 100%; min-height: 64px; resize: vertical; padding: 7px 9px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; line-height: 19px; }\n.dsdr-textarea:focus { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }\n.dsdr-manual-add { display: grid; grid-template-columns: 145px minmax(0, 1fr) auto; gap: 8px; align-items: center; margin: 10px 0 14px; }\n.dsdr-preview-list { display: flex; flex-direction: column; gap: 10px; }\n.dsdr-preview-day { display: flex; flex-direction: column; gap: 7px; padding: 11px 12px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-preview-day-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }\n.dsdr-preview-toggle { display: flex; flex: 1; align-items: center; flex-wrap: wrap; gap: 4px 6px; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; text-align: left; cursor: pointer; }\n.dsdr-preview-toggle:hover .dsdr-preview-date { color: var(--dsw-alias-brand-primary); }\n.dsdr-preview-chevron { flex: none; width: 13px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 20px; }\n.dsdr-preview-badge { display: inline-flex; align-items: center; padding: 1px 6px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 999px; color: var(--dsw-alias-label-secondary); font-size: 10px; line-height: 16px; }\n.dsdr-preview-body { display: flex; flex-direction: column; gap: 7px; margin-top: 2px; padding-top: 8px; border-top: 1px dashed var(--dsw-alias-border-l1); }\n.dsdr-preview-date { font-size: 13px; line-height: 20px; font-weight: 600; }\n.dsdr-preview-raw { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 19px; }\n.dsdr-manual-list { display: flex; flex-wrap: wrap; gap: 6px; }\n.dsdr-manual-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 2px 6px 2px 9px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 999px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font-size: 11px; line-height: 18px; overflow-wrap: anywhere; }\n.dsdr-manual-remove { border: 0; background: transparent; color: var(--dsw-alias-state-error-primary); font: inherit; font-size: 14px; line-height: 16px; padding: 0 1px; cursor: pointer; }\n.dsdr-ai-text { margin-top: 5px; color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 20px; white-space: pre-wrap; }\n.dsdr-filter-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 10px; }\n.dsdr-datasource-tabs { margin-bottom: -16px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }\n.dsdr-datasource-panel { border-top-left-radius: 0; border-top-right-radius: 0; }\n.dsdr-tabs { display: flex; align-items: center; gap: 4px; margin-top: 12px; border-bottom: 1px solid var(--dsw-alias-border-l1); }\n.dsdr-tab { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px 8px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--dsw-alias-label-secondary); font: inherit; font-size: 12px; line-height: 18px; cursor: pointer; }\n.dsdr-tab:hover { color: var(--dsw-alias-label-primary); }\n.dsdr-tab.is-active { color: var(--dsw-alias-label-primary); border-bottom-color: #146b5a; font-weight: 600; }\n.dsdr-tab-count { display: inline-flex; min-width: 17px; height: 17px; align-items: center; justify-content: center; padding: 0 5px; border-radius: 999px; background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-secondary); font-size: 10px; line-height: 17px; }\n.dsdr-filter-author { flex: 1 1 280px; min-width: 220px; }\n.dsdr-ai-options { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-top: 10px; }\n.dsdr-schedule-status { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--dsw-alias-border-l1); }\n.dsdr-schedule-status-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 10px; }\n.dsdr-history-list { display: flex; flex-wrap: wrap; gap: 4px 12px; }\n.dsdr-history-link { color: #146b5a; font-size: 12px; line-height: 18px; text-decoration: none; }\n.dsdr-history-link:hover { text-decoration: underline; }\n.dsdr-test-results { display: flex; flex-direction: column; gap: 5px; margin: 0 0 10px; padding: 8px 10px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-scan { display: flex; flex-direction: column; gap: 7px; margin: 0 0 12px; padding: 12px; border: 1px dashed var(--dsw-alias-border-l2); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-scan-title { font-size: 13px; line-height: 20px; font-weight: 600; }\n.dsdr-scan-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }\n.dsdr-source { display: grid; grid-template-columns: minmax(0, 1.5fr) 150px 34px; gap: 8px; align-items: end; margin-top: 8px; }\n.dsdr-source-docs { grid-template-columns: minmax(0, 1fr) minmax(120px, .35fr) 34px; }\n.dsdr-icon-btn { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; line-height: 1; font-size: 18px; }\n.dsdr-hint { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-error { border: 1px solid var(--dsw-alias-state-error-primary); border-radius: 9px; color: var(--dsw-alias-state-error-primary); background: transparent; padding: 9px 12px; font-size: 12px; line-height: 18px; white-space: pre-wrap; }\n.dsdr-error-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }\n.dsdr-notice { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-ok { color: var(--dsw-alias-state-success-primary); }\n.dsdr-warn { color: var(--dsw-alias-state-warn-primary); }\n.dsdr-bad { color: var(--dsw-alias-state-error-primary); }\n.dsdr-empty { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; padding: 10px 0 2px; }\n.dsdr-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }\n.dsdr-stat { border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; padding: 10px 12px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-stat-value { font-size: 20px; line-height: 26px; font-weight: 600; }\n.dsdr-stat-label { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-list { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }\n.dsdr-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 18px; }\n.dsdr-dot { flex: none; width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: var(--dsw-alias-state-idle-primary); }\n.dsdr-dot.ok { background: var(--dsw-alias-state-success-primary); }\n.dsdr-dot.warn { background: var(--dsw-alias-state-warn-primary); }\n.dsdr-dot.error { background: var(--dsw-alias-state-error-primary); }\n.dsdr-source-name { font-weight: 500; }\n.dsdr-source-meta { color: var(--dsw-alias-label-secondary); }\n.dsdr-code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; }\n.dsdr-footer { color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 17px; }\n.dsdr-spacer { flex: 1; }\n@media (max-width: 780px) { .dsdr-page { padding: 20px 16px 40px; } .dsdr-hero-action { flex: 1 0 100%; width: 100%; align-items: stretch; margin-left: 0; } .dsdr-hero-buttons { width: 100%; } .dsdr-hero-buttons .dsdr-btn { flex: 1; } .dsdr-split { flex: 1; } .dsdr-split .dsdr-generate { flex: 1; } .dsdr-generate { width: 100%; } .dsdr-ai-options { grid-template-columns: 1fr; } .dsdr-range { grid-template-columns: 1fr 1fr; } .dsdr-range .dsdr-actions { grid-column: 1 / -1; } .dsdr-stats { grid-template-columns: 1fr 1fr; } .dsdr-scan-row { grid-template-columns: 1fr; } .dsdr-manual-add { grid-template-columns: 1fr; } .dsdr-source, .dsdr-source-docs { grid-template-columns: 1fr; } .dsdr-source .dsdr-icon-btn { justify-self: end; } }\n";
+  var styles_default = ".dsdr-root { height: 100%; overflow: auto; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); }\n.dsdr-page { box-sizing: border-box; max-width: 1080px; margin: 0 auto; padding: 28px 28px 56px; display: flex; flex-direction: column; gap: 16px; }\n.dsdr-hero { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 14px; }\n.dsdr-hero-copy { flex: 1; min-width: 0; }\n.dsdr-hero-action { display: flex; flex: none; flex-direction: column; align-items: flex-end; gap: 5px; margin-left: auto; }\n.dsdr-hero-buttons { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }\n.dsdr-save-btn { min-height: 38px; background: #3b4046; border-color: #3b4046; color: #ffffff; font-weight: 600; }\n.dsdr-save-btn:hover { background: #292d31; border-color: #292d31; }\n.dsdr-save-btn:disabled { background: #666b70; border-color: #666b70; color: #ffffff; opacity: .8; }\n.dsdr-generate { min-height: 38px; padding: 9px 16px; font-size: 13px; white-space: nowrap; }\n.dsdr-btn-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }\n.dsdr-split { position: relative; display: inline-flex; align-items: stretch; }\n.dsdr-split .dsdr-generate { border-radius: 8px 0 0 8px; }\n.dsdr-save-split .dsdr-save-btn:first-child { border-radius: 8px 0 0 8px; }\n.dsdr-save-split .dsdr-split-toggle { border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255, 255, 255, .25); background: #3b4046; border-color: #3b4046; }\n.dsdr-save-split .dsdr-split-toggle:hover { background: #292d31; border-color: #292d31; }\n.dsdr-split > .dsdr-split-toggle { min-height: 38px; padding: 0 9px; border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255, 255, 255, .32); }\n.dsdr-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; min-width: 190px; padding: 5px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 10px; background: var(--dsw-alias-bg-overlay); box-shadow: 0 10px 28px rgba(0, 0, 0, .2); }\n.dsdr-menu-title { padding: 5px 8px 4px; color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }\n.dsdr-menu-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 7px 8px; border: 0; border-radius: 7px; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; line-height: 18px; text-align: left; cursor: pointer; }\n.dsdr-menu-item:hover { background: var(--dsw-alias-bg-layer-2); }\n.dsdr-menu-item.is-active { background: var(--dsw-alias-bg-layer-2); font-weight: 600; }\n.dsdr-menu-item-start { justify-content: flex-start; gap: 9px; }\n.dsdr-menu-check { width: 14px; color: #146b5a; text-align: center; }\n.dsdr-save { color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }\n.dsdr-mark { flex: none; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; background: var(--dsw-alias-bg-layer-2); border: 1px solid var(--dsw-alias-border-l1); }\n.dsdr-title { margin: 0; font-size: 22px; line-height: 30px; font-weight: 600; }\n.dsdr-sub { margin: 2px 0 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; }\n.dsdr-card { border: 1px solid var(--dsw-alias-border-l1); border-radius: 12px; background: var(--dsw-alias-bg-layer-1); padding: 16px 18px; }\n.dsdr-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }\n.dsdr-card-title { font-size: 14px; line-height: 22px; font-weight: 600; }\n.dsdr-ai-title { display: inline-block; font-size: 15px; font-weight: 700; letter-spacing: .03em; background: linear-gradient(100deg, #0f766e 0%, #06b6d4 22%, #3b82f6 46%, #8b5cf6 70%, #0f766e 100%); background-size: 320% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 7px rgba(20, 184, 166, .22)); animation: dsdr-ai-gradient 5s ease-in-out infinite; }\n@keyframes dsdr-ai-gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }\n@media (prefers-reduced-motion: reduce) { .dsdr-ai-title { animation: none; } }\n.dsdr-card-desc { margin-top: 2px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-title-with-info { display: flex; align-items: center; gap: 6px; min-width: 0; }\n.dsdr-info { position: relative; display: inline-flex; flex: none; align-items: center; justify-content: center; width: 15px; height: 15px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 50%; color: var(--dsw-alias-label-secondary); font-family: Georgia, serif; font-size: 10px; font-style: italic; font-weight: 700; line-height: 1; cursor: help; }\n.dsdr-info:hover, .dsdr-info:focus-visible { border-color: #146b5a; color: #146b5a; outline: none; }\n.dsdr-info::after { content: attr(data-tip); position: absolute; top: calc(100% + 8px); left: 50%; z-index: 80; width: max-content; max-width: 280px; padding: 7px 9px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: var(--dsw-alias-bg-overlay); color: var(--dsw-alias-label-primary); box-shadow: 0 7px 20px rgba(0, 0, 0, .2); font-family: inherit; font-size: 11px; font-style: normal; font-weight: 400; line-height: 17px; text-align: left; white-space: normal; opacity: 0; visibility: hidden; transform: translate(-50%, -3px); transition: opacity .15s ease, transform .15s ease, visibility .15s ease; pointer-events: none; }\n.dsdr-info:hover::after, .dsdr-info:focus-visible::after { opacity: 1; visibility: visible; transform: translate(-50%, 0); }\n.dsdr-range { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; }\n.dsdr-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }\n.dsdr-label { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-input { box-sizing: border-box; width: 100%; height: 32px; padding: 4px 9px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font: inherit; font-size: 13px; }\n.dsdr-input:focus { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }\n.dsdr-input::placeholder { color: var(--dsw-alias-label-secondary); opacity: .75; }\n.dsdr-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }\n.dsdr-btn { box-sizing: border-box; border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px; background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; font-weight: 500; line-height: 20px; padding: 5px 11px; cursor: pointer; }\n.dsdr-btn:hover { background: var(--dsw-alias-bg-layer-1); border-color: var(--dsw-alias-brand-primary); }\n.dsdr-btn:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }\n.dsdr-btn:disabled { opacity: .7; cursor: not-allowed; }\n.dsdr-btn-primary { background: #146b5a; border-color: #146b5a; color: #ffffff; font-weight: 600; box-shadow: 0 2px 6px rgba(0, 0, 0, .18); }\n.dsdr-btn-primary:hover { background: #0f5547; border-color: #0f5547; opacity: 1; }\n.dsdr-btn-primary:disabled { background: #6b8a82; border-color: #6b8a82; color: #ffffff; opacity: .8; }\n.dsdr-btn-danger { border-color: transparent; background: transparent; color: var(--dsw-alias-state-error-primary); font-weight: 600; }\n.dsdr-btn-danger:hover { background: var(--dsw-alias-bg-layer-2); border-color: transparent; }\n.dsdr-check { display: inline-flex; align-items: center; gap: 7px; color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 20px; cursor: pointer; white-space: nowrap; }\n.dsdr-check input { width: 15px; height: 15px; margin: 0; accent-color: #15557f; cursor: pointer; }\n.dsdr-check.is-disabled { color: var(--dsw-alias-label-secondary); cursor: not-allowed; opacity: .7; }\n.dsdr-check.is-disabled input { cursor: not-allowed; }\n.dsdr-switch { position: relative; display: inline-flex; align-items: center; cursor: pointer; }\n.dsdr-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }\n.dsdr-switch-track { position: relative; width: 40px; height: 22px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 999px; background: var(--dsw-alias-bg-layer-2); transition: background .18s ease, border-color .18s ease; }\n.dsdr-switch-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--dsw-alias-label-secondary); transition: transform .18s ease, background .18s ease; }\n.dsdr-switch input:checked + .dsdr-switch-track { background: #146b5a; border-color: #146b5a; }\n.dsdr-switch input:checked + .dsdr-switch-track .dsdr-switch-thumb { transform: translateX(18px); background: #ffffff; }\n.dsdr-switch input:focus-visible + .dsdr-switch-track { outline: 2px solid #146b5a; outline-offset: 2px; }\n.dsdr-switch.is-disabled { opacity: .55; cursor: not-allowed; }\n.dsdr-switch.is-disabled input { cursor: not-allowed; }\n.dsdr-progress-card { display: flex; flex-direction: column; gap: 7px; }\n.dsdr-progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 12px; line-height: 18px; color: var(--dsw-alias-label-primary); }\n.dsdr-progress-value { flex: none; color: var(--dsw-alias-label-secondary); font-variant-numeric: tabular-nums; }\n.dsdr-progress-track { height: 6px; overflow: hidden; border-radius: 999px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-progress-fill { height: 100%; border-radius: 999px; background: #15557f; transition: width .3s ease; }\n.dsdr-progress-track.is-indeterminate .dsdr-progress-fill { width: 35% !important; animation: dsdr-progress 1.2s ease-in-out infinite; }\n@keyframes dsdr-progress { 0% { transform: translateX(-110%); } 100% { transform: translateX(320%); } }\n.dsdr-ai-result { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-preview-overall { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }\n.dsdr-textarea { box-sizing: border-box; width: 100%; min-height: 64px; resize: vertical; padding: 7px 9px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; line-height: 19px; }\n.dsdr-textarea:focus { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }\n.dsdr-manual-add { display: grid; grid-template-columns: 145px minmax(0, 1fr) auto; gap: 8px; align-items: center; margin: 10px 0 14px; }\n.dsdr-preview-list { display: flex; flex-direction: column; gap: 10px; }\n.dsdr-preview-day { display: flex; flex-direction: column; gap: 7px; padding: 11px 12px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-preview-day-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }\n.dsdr-preview-toggle { display: flex; flex: 1; align-items: center; flex-wrap: wrap; gap: 4px 6px; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; text-align: left; cursor: pointer; }\n.dsdr-preview-toggle:hover .dsdr-preview-date { color: var(--dsw-alias-brand-primary); }\n.dsdr-preview-chevron { flex: none; width: 13px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 20px; }\n.dsdr-preview-badge { display: inline-flex; align-items: center; padding: 1px 6px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 999px; color: var(--dsw-alias-label-secondary); font-size: 10px; line-height: 16px; }\n.dsdr-preview-body { display: flex; flex-direction: column; gap: 7px; margin-top: 2px; padding-top: 8px; border-top: 1px dashed var(--dsw-alias-border-l1); }\n.dsdr-preview-date { font-size: 13px; line-height: 20px; font-weight: 600; }\n.dsdr-preview-raw { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 19px; }\n.dsdr-manual-list { display: flex; flex-wrap: wrap; gap: 6px; }\n.dsdr-manual-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 2px 6px 2px 9px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 999px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font-size: 11px; line-height: 18px; overflow-wrap: anywhere; }\n.dsdr-manual-remove { border: 0; background: transparent; color: var(--dsw-alias-state-error-primary); font: inherit; font-size: 14px; line-height: 16px; padding: 0 1px; cursor: pointer; }\n.dsdr-ai-text { margin-top: 5px; color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 20px; white-space: pre-wrap; }\n.dsdr-filter-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 10px; }\n.dsdr-datasource-tabs { margin-bottom: -16px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }\n.dsdr-datasource-panel { border-top-left-radius: 0; border-top-right-radius: 0; }\n.dsdr-tabs { display: flex; align-items: center; gap: 4px; margin-top: 12px; border-bottom: 1px solid var(--dsw-alias-border-l1); }\n.dsdr-tab { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px 8px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--dsw-alias-label-secondary); font: inherit; font-size: 12px; line-height: 18px; cursor: pointer; }\n.dsdr-tab:hover { color: var(--dsw-alias-label-primary); }\n.dsdr-tab.is-active { color: var(--dsw-alias-label-primary); border-bottom-color: #146b5a; font-weight: 600; }\n.dsdr-tab-count { display: inline-flex; min-width: 17px; height: 17px; align-items: center; justify-content: center; padding: 0 5px; border-radius: 999px; background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-secondary); font-size: 10px; line-height: 17px; }\n.dsdr-filter-author { flex: 1 1 280px; min-width: 220px; }\n.dsdr-ai-options { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-top: 10px; }\n.dsdr-schedule-status { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--dsw-alias-border-l1); }\n.dsdr-schedule-status-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 10px; }\n.dsdr-history-list { display: flex; flex-wrap: wrap; gap: 4px 12px; }\n.dsdr-history-link { color: #146b5a; font-size: 12px; line-height: 18px; text-decoration: none; }\n.dsdr-history-link:hover { text-decoration: underline; }\n.dsdr-test-results { display: flex; flex-direction: column; gap: 5px; margin: 0 0 10px; padding: 8px 10px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-scan { display: flex; flex-direction: column; gap: 7px; margin: 0 0 12px; padding: 12px; border: 1px dashed var(--dsw-alias-border-l2); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-scan-title { font-size: 13px; line-height: 20px; font-weight: 600; }\n.dsdr-scan-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }\n.dsdr-source { display: grid; grid-template-columns: minmax(0, 1.5fr) 150px 34px; gap: 8px; align-items: end; margin-top: 8px; }\n.dsdr-source-docs { grid-template-columns: minmax(0, 1fr) minmax(120px, .35fr) 34px; }\n.dsdr-icon-btn { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; line-height: 1; font-size: 18px; }\n.dsdr-hint { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-error { border: 1px solid var(--dsw-alias-state-error-primary); border-radius: 9px; color: var(--dsw-alias-state-error-primary); background: transparent; padding: 9px 12px; font-size: 12px; line-height: 18px; white-space: pre-wrap; }\n.dsdr-error-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }\n.dsdr-notice { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-ok { color: var(--dsw-alias-state-success-primary); }\n.dsdr-warn { color: var(--dsw-alias-state-warn-primary); }\n.dsdr-bad { color: var(--dsw-alias-state-error-primary); }\n.dsdr-empty { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; padding: 10px 0 2px; }\n.dsdr-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }\n.dsdr-stat { border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; padding: 10px 12px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-stat-value { font-size: 20px; line-height: 26px; font-weight: 600; }\n.dsdr-stat-label { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-list { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }\n.dsdr-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 18px; }\n.dsdr-dot { flex: none; width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: var(--dsw-alias-state-idle-primary); }\n.dsdr-dot.ok { background: var(--dsw-alias-state-success-primary); }\n.dsdr-dot.warn { background: var(--dsw-alias-state-warn-primary); }\n.dsdr-dot.error { background: var(--dsw-alias-state-error-primary); }\n.dsdr-source-name { font-weight: 500; }\n.dsdr-source-meta { color: var(--dsw-alias-label-secondary); }\n.dsdr-code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; }\n.dsdr-footer { color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 17px; }\n.dsdr-spacer { flex: 1; }\n@media (max-width: 780px) { .dsdr-page { padding: 20px 16px 40px; } .dsdr-hero-action { flex: 1 0 100%; width: 100%; align-items: stretch; margin-left: 0; } .dsdr-hero-buttons { width: 100%; } .dsdr-hero-buttons .dsdr-btn { flex: 1; } .dsdr-split { flex: 1; } .dsdr-split .dsdr-generate { flex: 1; } .dsdr-generate { width: 100%; } .dsdr-ai-options { grid-template-columns: 1fr; } .dsdr-range { grid-template-columns: 1fr 1fr; } .dsdr-range .dsdr-actions { grid-column: 1 / -1; } .dsdr-stats { grid-template-columns: 1fr 1fr; } .dsdr-scan-row { grid-template-columns: 1fr; } .dsdr-manual-add { grid-template-columns: 1fr; } .dsdr-source, .dsdr-source-docs { grid-template-columns: 1fr; } .dsdr-source .dsdr-icon-btn { justify-self: end; } }\n\n.dsdr-confirm-backdrop { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, .38); }\n.dsdr-confirm { width: min(400px, 100%); box-sizing: border-box; padding: 18px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 12px; background: var(--dsw-alias-bg-overlay); box-shadow: 0 18px 48px rgba(0, 0, 0, .28); }\n.dsdr-confirm-title { margin: 0 0 8px; font-size: 15px; line-height: 22px; }\n.dsdr-confirm-message { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 19px; white-space: pre-wrap; }\n.dsdr-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }\n\n\n.dsdr-confirm .dsdr-btn-danger { background: #b42318; border-color: #b42318; color: #ffffff; }\n.dsdr-confirm .dsdr-btn-danger:hover { background: #912018; border-color: #912018; }\n\n\n.dsdr-confirm-backdrop { pointer-events: auto; background: rgba(0, 0, 0, .5); }\n.dsdr-confirm { pointer-events: auto; background: var(--dsw-alias-bg-overlay, var(--dsw-alias-bg-base, #ffffff)); color: var(--dsw-alias-label-primary, #1f2328); }\n.dsdr-confirm .dsdr-btn { pointer-events: auto; }\n\n\r\n\n.dsdr-confirm { background: #1f2328; color: #f5f7fa; border-color: rgba(255, 255, 255, .16); }\n.dsdr-confirm-title { color: #f5f7fa; }\n.dsdr-confirm-message { color: #c9d1d9; }\n\r\n";
 
   // src/client/styles.js
   function installStyles(ctx) {
@@ -524,7 +524,7 @@ var __DSH_DAILY_REPORT__ = (() => {
 
   // src/client/views/AiCard.jsx
   function AiCard() {
-    const { settings, setSettings, useAi, setUseAi, aiInfo, t } = useApp();
+    const { settings, setSettings, useAi, setUseAi, aiInfo, t, confirm = async () => true } = useApp();
     return /* @__PURE__ */ import_react6.default.createElement(Card, null, /* @__PURE__ */ import_react6.default.createElement("div", { className: "dsdr-card-head" }, /* @__PURE__ */ import_react6.default.createElement("div", null, /* @__PURE__ */ import_react6.default.createElement("div", { className: "dsdr-title-with-info" }, /* @__PURE__ */ import_react6.default.createElement("div", { className: "dsdr-card-title dsdr-ai-title" }, t("ai.title", "AI \u5206\u6790")), /* @__PURE__ */ import_react6.default.createElement(
       InfoDot,
       {
@@ -539,7 +539,22 @@ var __DSH_DAILY_REPORT__ = (() => {
         checked: useAi,
         disabled: !aiInfo.available,
         label: t("ai.enable", "\u542F\u7528 AI \u5206\u6790"),
-        onChange: (event) => setUseAi(event.target.checked)
+        onChange: async (event) => {
+          const nextChecked = event.target.checked;
+          if (!nextChecked && useAi) {
+            const accepted = await confirm({
+              title: t("confirm.disableAi.title", "\u5173\u95ED AI \u5206\u6790\uFF1F"),
+              message: t(
+                "confirm.disableAi.message",
+                "\u5173\u95ED\u540E\u751F\u6210\u65E5\u62A5\u5C06\u4E0D\u518D\u8C03\u7528\u6A21\u578B\u5206\u6790\uFF0C\u5DF2\u751F\u6210\u7684 AI \u7ED3\u679C\u4E0D\u4F1A\u5220\u9664\u3002"
+              ),
+              confirmLabel: t("confirm.disable", "\u5173\u95ED"),
+              cancelLabel: t("confirm.cancel", "\u53D6\u6D88")
+            });
+            if (!accepted) return;
+          }
+          setUseAi(nextChecked);
+        }
       }
     )), /* @__PURE__ */ import_react6.default.createElement("div", { className: "dsdr-hint" }, aiInfo.available ? t("ai.model", "\u5F53\u524D\u6A21\u578B\uFF1A") + (settings.aiModel ? (settings.aiProvider ? settings.aiProvider + "/" : "") + settings.aiModel : aiInfo.provider + "/" + aiInfo.model) + " \xB7 " + t("ai.cost", "\u4F1A\u589E\u52A0\u751F\u6210\u65F6\u95F4\u548C\u6A21\u578B token \u6D88\u8017\u3002") : t("ai.unavailable", "\u5F53\u524D\u6CA1\u6709\u53EF\u7528\u7684\u9ED8\u8BA4\u6A21\u578B\u3002")), /* @__PURE__ */ import_react6.default.createElement("div", { className: "dsdr-ai-options" }, /* @__PURE__ */ import_react6.default.createElement("div", { className: "dsdr-field" }, /* @__PURE__ */ import_react6.default.createElement("label", { className: "dsdr-label", htmlFor: "dsdr-ai-template" }, t("ai.template", "\u5206\u6790\u98CE\u683C")), /* @__PURE__ */ import_react6.default.createElement(
       "select",
@@ -561,10 +576,19 @@ var __DSH_DAILY_REPORT__ = (() => {
         id: "dsdr-ai-model",
         className: "dsdr-input",
         value: settings.aiModel || "",
-        onChange: (event) => {
+        onChange: async (event) => {
           const selected = aiInfo.models.find(
             (model) => model.id === event.target.value
           );
+          const nextModel = selected ? selected.id : "";
+          if (nextModel === (settings.aiModel || "")) return;
+          const accepted = await confirm({
+            title: t("confirm.changeModel.title", "\u5207\u6362 AI \u6A21\u578B\uFF1F"),
+            message: t("confirm.changeModel.message", "\u5C06\u5207\u6362\u5230\uFF1A") + (selected ? selected.name || selected.id : t("ai.defaultModel", "\u9ED8\u8BA4\u6A21\u578B")),
+            confirmLabel: t("confirm.switch", "\u5207\u6362"),
+            cancelLabel: t("confirm.cancel", "\u53D6\u6D88")
+          });
+          if (!accepted) return;
           setSettings((previous) => ({
             ...previous,
             aiProvider: selected ? selected.provider : "",
@@ -1097,6 +1121,7 @@ var __DSH_DAILY_REPORT__ = (() => {
     const classes = [
       "dsdr-btn",
       variant === "primary" ? "dsdr-btn-primary" : "",
+      variant === "danger" ? "dsdr-btn-danger" : "",
       icon ? "dsdr-btn-with-icon" : "",
       className
     ].filter(Boolean).join(" ");
@@ -1113,7 +1138,8 @@ var __DSH_DAILY_REPORT__ = (() => {
       scheduleError,
       loadScheduleStatus,
       runScheduleNow,
-      t
+      t,
+      confirm = async () => true
     } = useApp();
     return /* @__PURE__ */ import_react11.default.createElement(Card, null, /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-card-head" }, /* @__PURE__ */ import_react11.default.createElement("div", null, /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-title-with-info" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-card-title" }, t("schedule.title", "\u5B9A\u65F6\u81EA\u52A8\u751F\u6210")), /* @__PURE__ */ import_react11.default.createElement(
       InfoDot,
@@ -1128,10 +1154,25 @@ var __DSH_DAILY_REPORT__ = (() => {
       {
         checked: settings.scheduleEnabled === true,
         label: t("schedule.enable", "\u542F\u7528\u81EA\u52A8\u751F\u6210"),
-        onChange: (event) => setSettings((previous) => ({
-          ...previous,
-          scheduleEnabled: event.target.checked
-        }))
+        onChange: async (event) => {
+          const nextChecked = event.target.checked;
+          if (nextChecked && settings.scheduleEnabled !== true) {
+            const accepted = await confirm({
+              title: t("confirm.enableSchedule.title", "\u542F\u7528\u5B9A\u65F6\u81EA\u52A8\u751F\u6210\uFF1F"),
+              message: t(
+                "confirm.enableSchedule.message",
+                "\u542F\u7528\u540E\u5C06\u5728\u8BBE\u5B9A\u65F6\u95F4\u81EA\u52A8\u751F\u6210\u5E76\u4FDD\u5B58\u65E5\u62A5\uFF0C\u53EF\u80FD\u8986\u76D6\u5386\u53F2\u76EE\u5F55\u4E2D\u7684\u540C\u540D\u6587\u4EF6\u3002"
+              ),
+              confirmLabel: t("confirm.enable", "\u542F\u7528"),
+              cancelLabel: t("confirm.cancel", "\u53D6\u6D88")
+            });
+            if (!accepted) return;
+          }
+          setSettings((previous) => ({
+            ...previous,
+            scheduleEnabled: nextChecked
+          }));
+        }
       }
     )), /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-ai-options" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-field" }, /* @__PURE__ */ import_react11.default.createElement("label", { className: "dsdr-label", htmlFor: "dsdr-schedule-frequency" }, t("schedule.frequency", "\u9891\u7387")), /* @__PURE__ */ import_react11.default.createElement(
       "select",
@@ -1636,6 +1677,7 @@ var __DSH_DAILY_REPORT__ = (() => {
     loading,
     setError,
     setSettingsMenuOpen,
+    confirm = async () => true,
     t
   }) {
     const [saveState, setSaveState] = import_react16.default.useState("idle");
@@ -1733,6 +1775,16 @@ var __DSH_DAILY_REPORT__ = (() => {
         const nextAi = source.aiEnabled !== false;
         const nextRange = source.range && typeof source.range.start === "string" && typeof source.range.end === "string" && source.range.start <= source.range.end ? { start: source.range.start, end: source.range.end } : currentMonthRange();
         const nextFormat = FORMAT_OPTIONS.includes(source.format) ? source.format : "xlsx";
+        const accepted = await confirm({
+          title: t("confirm.importSettings.title", "\u5BFC\u5165\u8BBE\u7F6E\uFF1F"),
+          message: t(
+            "confirm.importSettings.message",
+            "\u5F53\u524D\u6570\u636E\u6E90\u3001AI\u3001\u65E5\u671F\u8303\u56F4\u548C\u5BFC\u51FA\u683C\u5F0F\u5C06\u88AB\u5BFC\u5165\u5185\u5BB9\u8986\u76D6\u3002"
+          ),
+          confirmLabel: t("confirm.import", "\u5BFC\u5165"),
+          cancelLabel: t("confirm.cancel", "\u53D6\u6D88")
+        });
+        if (!accepted) return;
         setSettings(imported);
         setUseAi(nextAi);
         setRange(nextRange);
@@ -1767,7 +1819,8 @@ var __DSH_DAILY_REPORT__ = (() => {
     sessionId,
     ctx,
     t,
-    errorMessageFromPayload
+    errorMessageFromPayload,
+    confirm = async () => true
   }) {
     const [showScan, setShowScan] = import_react17.default.useState(false);
     const [scanDir, setScanDir] = import_react17.default.useState("");
@@ -1806,13 +1859,33 @@ var __DSH_DAILY_REPORT__ = (() => {
         docs: [...previous.docs, { _key: uid(), location: "", label: "" }]
       }));
     }
-    function removeGit(index) {
+    async function removeGit(index) {
+      const item = settings.git[index] || {};
+      const label = item.label || item.location || t("git.unnamed", "\u672A\u547D\u540D\u4ED3\u5E93");
+      const accepted = await confirm({
+        title: t("confirm.removeGit.title", "\u5220\u9664 Git \u4ED3\u5E93\uFF1F"),
+        message: t("confirm.removeGit.message", "\u5C06\u4ECE\u5F53\u524D\u914D\u7F6E\u4E2D\u79FB\u9664\uFF1A") + label,
+        confirmLabel: t("confirm.remove", "\u5220\u9664"),
+        cancelLabel: t("confirm.cancel", "\u53D6\u6D88"),
+        danger: true
+      });
+      if (!accepted) return;
       setSettings((previous) => ({
         ...previous,
         git: previous.git.filter((_, itemIndex) => itemIndex !== index)
       }));
     }
-    function removeDoc(index) {
+    async function removeDoc(index) {
+      const item = settings.docs[index] || {};
+      const label = item.label || item.location || t("doc.unnamed", "\u672A\u547D\u540D\u6587\u6863");
+      const accepted = await confirm({
+        title: t("confirm.removeDoc.title", "\u5220\u9664\u672C\u5730\u6587\u6863\uFF1F"),
+        message: t("confirm.removeDoc.message", "\u5C06\u4ECE\u5F53\u524D\u914D\u7F6E\u4E2D\u79FB\u9664\uFF1A") + label,
+        confirmLabel: t("confirm.remove", "\u5220\u9664"),
+        cancelLabel: t("confirm.cancel", "\u53D6\u6D88"),
+        danger: true
+      });
+      if (!accepted) return;
       setSettings((previous) => ({
         ...previous,
         docs: previous.docs.filter((_, itemIndex) => itemIndex !== index)
@@ -2411,6 +2484,100 @@ var __DSH_DAILY_REPORT__ = (() => {
     return { generating, progress, generate, cancelGeneration };
   }
 
+  // src/client/hooks/useConfirm.js
+  var import_react20 = __toESM(__require("react"), 1);
+  function useConfirm() {
+    const [request, setRequest] = import_react20.default.useState(null);
+    const resolverRef = import_react20.default.useRef(null);
+    function confirm(options) {
+      return new Promise((resolve) => {
+        resolverRef.current = resolve;
+        setRequest(options || {});
+      });
+    }
+    function finish(result) {
+      const resolve = resolverRef.current;
+      resolverRef.current = null;
+      setRequest(null);
+      if (resolve) resolve(result);
+    }
+    return {
+      confirm,
+      dialogProps: {
+        open: request !== null,
+        ...request || {},
+        onConfirm: () => finish(true),
+        onCancel: () => finish(false)
+      }
+    };
+  }
+
+  // src/client/components/ConfirmDialog.jsx
+  var import_react21 = __toESM(__require("react"), 1);
+  function ConfirmDialog({
+    open = false,
+    title = "",
+    message = "",
+    confirmLabel = "\u786E\u8BA4",
+    cancelLabel = "\u53D6\u6D88",
+    danger = false,
+    onConfirm,
+    onCancel
+  }) {
+    const titleId = import_react21.default.useId();
+    if (!open) return null;
+    return /* @__PURE__ */ import_react21.default.createElement(
+      "div",
+      {
+        className: "dsdr-confirm-backdrop",
+        role: "presentation",
+        style: { backgroundColor: "rgba(0, 0, 0, 0.5)" },
+        onMouseDown: (event) => {
+          if (event.target === event.currentTarget) onCancel?.();
+        }
+      },
+      /* @__PURE__ */ import_react21.default.createElement(
+        "div",
+        {
+          className: "dsdr-confirm",
+          role: "dialog",
+          "aria-modal": "true",
+          "aria-labelledby": titleId,
+          style: {
+            backgroundColor: "#1f2328",
+            color: "#f5f7fa",
+            borderColor: "rgba(255, 255, 255, 0.16)"
+          }
+        },
+        /* @__PURE__ */ import_react21.default.createElement("h2", { className: "dsdr-confirm-title", id: titleId }, title),
+        /* @__PURE__ */ import_react21.default.createElement("div", { className: "dsdr-confirm-message", style: { color: "#c9d1d9" } }, message),
+        /* @__PURE__ */ import_react21.default.createElement("div", { className: "dsdr-confirm-actions" }, /* @__PURE__ */ import_react21.default.createElement(
+          "button",
+          {
+            type: "button",
+            className: "dsdr-btn",
+            onClick: (event) => {
+              event.stopPropagation();
+              onCancel?.();
+            }
+          },
+          cancelLabel
+        ), /* @__PURE__ */ import_react21.default.createElement(
+          "button",
+          {
+            type: "button",
+            className: "dsdr-btn " + (danger ? "dsdr-btn-danger" : "dsdr-btn-primary"),
+            onClick: (event) => {
+              event.stopPropagation();
+              onConfirm?.();
+            }
+          },
+          confirmLabel
+        ))
+      )
+    );
+  }
+
   // src/client/app.jsx
   function DailyReportView(props) {
     const ctx = props.ctx;
@@ -2439,9 +2606,10 @@ var __DSH_DAILY_REPORT__ = (() => {
       settingsMenuRef,
       settingsFileRef
     } = useMenus();
-    const [error, setError] = import_react20.default.useState("");
-    const [result, setResult] = import_react20.default.useState(null);
-    const resultRef = import_react20.default.useRef(null);
+    const { confirm, dialogProps } = useConfirm();
+    const [error, setError] = import_react22.default.useState("");
+    const [result, setResult] = import_react22.default.useState(null);
+    const resultRef = import_react22.default.useRef(null);
     const localeIsEnglish = currentLocaleId(ctx).toLowerCase().startsWith("en");
     const {
       scheduleStatus,
@@ -2473,6 +2641,7 @@ var __DSH_DAILY_REPORT__ = (() => {
       loading,
       setError,
       setSettingsMenuOpen,
+      confirm,
       t
     });
     const {
@@ -2506,7 +2675,8 @@ var __DSH_DAILY_REPORT__ = (() => {
       sessionId,
       ctx,
       t,
-      errorMessageFromPayload
+      errorMessageFromPayload,
+      confirm
     });
     const {
       preview,
@@ -2556,10 +2726,10 @@ var __DSH_DAILY_REPORT__ = (() => {
       errorMessageFromPayload,
       resultRef
     });
-    import_react20.default.useEffect(() => {
+    import_react22.default.useEffect(() => {
       resultRef.current = result;
     }, [result]);
-    import_react20.default.useEffect(() => {
+    import_react22.default.useEffect(() => {
       return () => {
         if (resultRef.current && resultRef.current.url)
           window.URL.revokeObjectURL(resultRef.current.url);
@@ -2672,10 +2842,11 @@ var __DSH_DAILY_REPORT__ = (() => {
       progress,
       generate,
       cancelGeneration,
+      confirm,
       t
     };
     setApp(app);
-    return /* @__PURE__ */ import_react20.default.createElement(AppContext.Provider, { value: app }, /* @__PURE__ */ import_react20.default.createElement(DailyReportPage, null));
+    return /* @__PURE__ */ import_react22.default.createElement(AppContext.Provider, { value: app }, /* @__PURE__ */ import_react22.default.createElement(DailyReportPage, null), /* @__PURE__ */ import_react22.default.createElement(ConfirmDialog, { ...dialogProps }));
   }
   function apply(ctx) {
     installStyles(ctx);
@@ -2703,7 +2874,7 @@ var __DSH_DAILY_REPORT__ = (() => {
           name: "main",
           key: "daily-report"
         },
-        (props) => /* @__PURE__ */ import_react20.default.createElement(DailyReportView, { ...props, ctx })
+        (props) => /* @__PURE__ */ import_react22.default.createElement(DailyReportView, { ...props, ctx })
       )
     );
     ctx.slots.inject(
@@ -2715,7 +2886,7 @@ var __DSH_DAILY_REPORT__ = (() => {
           order: 20,
           label: () => t("panel.title")
         },
-        (props) => /* @__PURE__ */ import_react20.default.createElement(PanelIcon, { ...props })
+        (props) => /* @__PURE__ */ import_react22.default.createElement(PanelIcon, { ...props })
       )
     );
   }

@@ -16,6 +16,7 @@ export function ScheduleCard() {
     loadScheduleStatus,
     runScheduleNow,
     t,
+    confirm = async () => true,
   } = useApp();
   return (
     <Card>
@@ -36,12 +37,25 @@ export function ScheduleCard() {
         <Switch
           checked={settings.scheduleEnabled === true}
           label={t("schedule.enable", "启用自动生成")}
-          onChange={(event) =>
+          onChange={async (event) => {
+            const nextChecked = event.target.checked;
+            if (nextChecked && settings.scheduleEnabled !== true) {
+              const accepted = await confirm({
+                title: t("confirm.enableSchedule.title", "启用定时自动生成？"),
+                message: t(
+                  "confirm.enableSchedule.message",
+                  "启用后将在设定时间自动生成并保存日报，可能覆盖历史目录中的同名文件。",
+                ),
+                confirmLabel: t("confirm.enable", "启用"),
+                cancelLabel: t("confirm.cancel", "取消"),
+              });
+              if (!accepted) return;
+            }
             setSettings((previous) => ({
               ...previous,
-              scheduleEnabled: event.target.checked,
-            }))
-          }
+              scheduleEnabled: nextChecked,
+            }));
+          }}
         />
       </div>
       <div className="dsdr-ai-options">

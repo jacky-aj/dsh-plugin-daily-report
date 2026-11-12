@@ -5,7 +5,7 @@ import { Switch } from "../components/Switch.jsx";
 import { InfoDot } from "../icons.jsx";
 
 export function AiCard() {
-  const { settings, setSettings, useAi, setUseAi, aiInfo, t } = useApp();
+  const { settings, setSettings, useAi, setUseAi, aiInfo, t, confirm = async () => true } = useApp();
   return (
     <Card>
       <div className="dsdr-card-head">
@@ -26,7 +26,22 @@ export function AiCard() {
           checked={useAi}
           disabled={!aiInfo.available}
           label={t("ai.enable", "启用 AI 分析")}
-          onChange={(event) => setUseAi(event.target.checked)}
+          onChange={async (event) => {
+            const nextChecked = event.target.checked;
+            if (!nextChecked && useAi) {
+              const accepted = await confirm({
+                title: t("confirm.disableAi.title", "关闭 AI 分析？"),
+                message: t(
+                  "confirm.disableAi.message",
+                  "关闭后生成日报将不再调用模型分析，已生成的 AI 结果不会删除。",
+                ),
+                confirmLabel: t("confirm.disable", "关闭"),
+                cancelLabel: t("confirm.cancel", "取消"),
+              });
+              if (!accepted) return;
+            }
+            setUseAi(nextChecked);
+          }}
         />
       </div>
       <div className="dsdr-hint">
@@ -74,10 +89,21 @@ export function AiCard() {
               id="dsdr-ai-model"
               className="dsdr-input"
               value={settings.aiModel || ""}
-              onChange={(event) => {
+              onChange={async (event) => {
                 const selected = aiInfo.models.find(
                   (model) => model.id === event.target.value,
                 );
+                const nextModel = selected ? selected.id : "";
+                if (nextModel === (settings.aiModel || "")) return;
+                const accepted = await confirm({
+                  title: t("confirm.changeModel.title", "切换 AI 模型？"),
+                  message:
+                    t("confirm.changeModel.message", "将切换到：") +
+                    (selected ? selected.name || selected.id : t("ai.defaultModel", "默认模型")),
+                  confirmLabel: t("confirm.switch", "切换"),
+                  cancelLabel: t("confirm.cancel", "取消"),
+                });
+                if (!accepted) return;
                 setSettings((previous) => ({
                   ...previous,
                   aiProvider: selected ? selected.provider : "",

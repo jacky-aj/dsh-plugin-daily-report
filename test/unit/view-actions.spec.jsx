@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AppContext } from "../../src/client/context.jsx";
@@ -22,7 +22,7 @@ function withApp(app, node) {
 }
 
 describe("view interactions", () => {
-  it("changes AI style and toggle", () => {
+  it("changes AI style and toggle", async () => {
     const setSettings = vi.fn();
     const setUseAi = vi.fn();
     render(
@@ -33,18 +33,19 @@ describe("view interactions", () => {
           useAi: true,
           setUseAi,
           aiInfo: { available: true, provider: "test", model: "mock", models: [] },
+          confirm: async () => true,
           t,
         },
         <AiCard />,
       ),
     );
     fireEvent.click(screen.getByRole("switch"));
-    expect(setUseAi).toHaveBeenCalledWith(false);
+    await waitFor(() => expect(setUseAi).toHaveBeenCalledWith(false));
     fireEvent.change(screen.getByDisplayValue("简洁"), { target: { value: "detailed" } });
     expect(setSettings).toHaveBeenCalled();
   });
 
-  it("explains unavailable AI and lets the user pick models", () => {
+  it("explains unavailable AI and lets the user pick models", async () => {
     const setSettings = vi.fn();
     render(
       withApp(
@@ -70,7 +71,7 @@ describe("view interactions", () => {
     expect(screen.getByRole("switch").disabled).toBe(true);
     const combos = screen.getAllByRole("combobox");
     fireEvent.change(combos[1], { target: { value: "model-b" } });
-    expect(setSettings).toHaveBeenCalled();
+    await waitFor(() => expect(setSettings).toHaveBeenCalled());
   });
 
   it("edits, adds and removes Git sources", () => {

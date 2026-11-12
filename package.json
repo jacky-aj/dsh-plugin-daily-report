@@ -18,7 +18,10 @@
     "lib/**/*.js",
     "locale/*.json",
     "icon.svg",
-    "README.md"
+    "README.md",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "docs/**/*.md"
   ],
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",

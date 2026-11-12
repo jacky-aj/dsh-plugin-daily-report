@@ -12,6 +12,8 @@ import { useSettingsTransfer } from "./hooks/useSettingsTransfer.js";
 import { useDataSources } from "./hooks/useDataSources.js";
 import { usePreview } from "./hooks/usePreview.js";
 import { useGeneration } from "./hooks/useGeneration.js";
+import { useConfirm } from "./hooks/useConfirm.js";
+import { ConfirmDialog } from "./components/ConfirmDialog.jsx";
 export function DailyReportView(props) {
   const ctx = props.ctx;
   const t = useTranslate(ctx);
@@ -40,6 +42,7 @@ export function DailyReportView(props) {
     settingsMenuRef,
     settingsFileRef,
   } = useMenus();
+  const { confirm, dialogProps } = useConfirm();
   const [error, setError] = React.useState("");
   const [result, setResult] = React.useState(null);
   const resultRef = React.useRef(null);
@@ -76,6 +79,7 @@ export function DailyReportView(props) {
     loading,
     setError,
     setSettingsMenuOpen,
+    confirm,
     t,
   });
   const {
@@ -110,6 +114,7 @@ export function DailyReportView(props) {
     ctx,
     t,
     errorMessageFromPayload,
+    confirm,
   });
   const {
     preview,
@@ -294,12 +299,14 @@ export function DailyReportView(props) {
     progress,
     generate,
     cancelGeneration,
+    confirm,
     t,
   };
   setApp(app);
   return (
     <AppContext.Provider value={app}>
       <DailyReportPage />
+      <ConfirmDialog {...dialogProps} />
     </AppContext.Provider>
   );
 }

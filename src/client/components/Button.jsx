@@ -10,6 +10,7 @@ export function Button({
   const classes = [
     "dsdr-btn",
     variant === "primary" ? "dsdr-btn-primary" : "",
+    variant === "danger" ? "dsdr-btn-danger" : "",
     icon ? "dsdr-btn-with-icon" : "",
     className,
   ]

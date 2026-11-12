@@ -11,6 +11,7 @@ export function useDataSources({
   ctx,
   t,
   errorMessageFromPayload,
+  confirm = async () => true,
 }) {
   const [showScan, setShowScan] = React.useState(false);
   const [scanDir, setScanDir] = React.useState("");
@@ -54,14 +55,34 @@ export function useDataSources({
     }));
   }
 
-  function removeGit(index) {
+  async function removeGit(index) {
+    const item = settings.git[index] || {};
+    const label = item.label || item.location || t("git.unnamed", "未命名仓库");
+    const accepted = await confirm({
+      title: t("confirm.removeGit.title", "删除 Git 仓库？"),
+      message: t("confirm.removeGit.message", "将从当前配置中移除：") + label,
+      confirmLabel: t("confirm.remove", "删除"),
+      cancelLabel: t("confirm.cancel", "取消"),
+      danger: true,
+    });
+    if (!accepted) return;
     setSettings((previous) => ({
       ...previous,
       git: previous.git.filter((_, itemIndex) => itemIndex !== index),
     }));
   }
 
-  function removeDoc(index) {
+  async function removeDoc(index) {
+    const item = settings.docs[index] || {};
+    const label = item.label || item.location || t("doc.unnamed", "未命名文档");
+    const accepted = await confirm({
+      title: t("confirm.removeDoc.title", "删除本地文档？"),
+      message: t("confirm.removeDoc.message", "将从当前配置中移除：") + label,
+      confirmLabel: t("confirm.remove", "删除"),
+      cancelLabel: t("confirm.cancel", "取消"),
+      danger: true,
+    });
+    if (!accepted) return;
     setSettings((previous) => ({
       ...previous,
       docs: previous.docs.filter((_, itemIndex) => itemIndex !== index),
@@ -237,4 +258,5 @@ export function useDataSources({
     scanAndAdd,
   };
 }
+
 
