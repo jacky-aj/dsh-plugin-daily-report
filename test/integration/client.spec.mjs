@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { test } from "vitest";
+
+test("client integration", async () => {
 
 const pageZh = JSON.parse(readFileSync(new URL("../../locale/page.zh.json", import.meta.url), "utf8"));
 const pageEn = JSON.parse(readFileSync(new URL("../../locale/page.en.json", import.meta.url), "utf8"));
@@ -97,3 +100,5 @@ assert.ok(dictionaries["daily-report"].en["page.title"]);
 
 console.log(JSON.stringify({ ok: true, slots: registrations.map((item) => item.options.name) }));
 
+
+});

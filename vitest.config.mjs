@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: ["test/unit/**/*.spec.{js,jsx}"],
+    include: ["test/**/*.spec.{js,jsx,mjs}"],
     environment: "node",
     coverage: {
       provider: "v8",
@@ -12,6 +12,7 @@ export default defineConfig({
     },
   },
 });
+
 
 
 

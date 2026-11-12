@@ -6,6 +6,9 @@ import { join } from "node:path";
 
 import { collectReport } from "../../lib/collect.js";
 import { buildReportWorkbook, reportFileName, summarizeReport } from "../../lib/report.js";
+import { test } from "vitest";
+
+test("report integration", async () => {
 
 const root = mkdtempSync(join(tmpdir(), "daily-report-test-"));
 const repo = join(root, "repo");
@@ -138,3 +141,5 @@ console.log(
 
 rmSync(root, { recursive: true, force: true });
 
+
+});

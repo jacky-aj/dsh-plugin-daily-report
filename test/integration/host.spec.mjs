@@ -6,6 +6,9 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 
 import { apply } from "../../index.js";
+import { test } from "vitest";
+
+test("host integration", async () => {
 
 const root = mkdtempSync(join(tmpdir(), "daily-report-host-"));
 process.env.DSH_HOME = join(root, "home");
@@ -328,3 +331,5 @@ console.log(JSON.stringify({ ok: true, state: state.defaults, stats: summary.sta
 for (const dispose of cleanups) dispose();
 rmSync(root, { recursive: true, force: true });
 
+
+});

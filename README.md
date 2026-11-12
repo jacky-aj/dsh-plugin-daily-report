@@ -171,21 +171,19 @@ npm run build
 
 ```powershell
 npm test
-npm run test:integration
 npm run test:coverage
 npm run check
 ```
 
-- `npm test`：Vitest 单测
-- `npm run test:integration`：Node 集成测试
+- `npm test`：Vitest 单测 + 集成测试
 - `npm run test:coverage`：Vitest 全量覆盖率
-- `npm run check`：构建 + ESLint + 集成测试 + 全量覆盖率
+- `npm run check`：构建 + ESLint + 全量覆盖率
 
 测试目录：
 
 ```text
 test/unit/         Vitest 单测
-test/integration/  Node 集成测试
+test/integration/  Vitest 集成测试
 test/fixtures/     静态测试输入
 ```
 
@@ -216,7 +214,7 @@ functions  80%
 branches   60%
 ```
 
-`index.js` 的 Host 路由仍由 Node 集成测试覆盖，尚未纳入 Vitest 85% 门槛。
+`index.js` 的 Host 路由已纳入 Vitest 集成测试和全量覆盖率统计。
 
 ## 说明与边界
 

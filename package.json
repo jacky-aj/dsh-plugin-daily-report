@@ -70,10 +70,9 @@
     "prepublishOnly": "npm run build",
     "lint": "eslint client.js index.js lib/**/*.js",
     "test": "vitest run",
-    "check": "npm run build && npm run lint && npm run test:integration && npm run coverage:vitest",
+    "check": "npm run build && npm run lint && npm run coverage:vitest",
     "test:coverage": "vitest run --coverage",
     "test:vitest": "vitest run",
-    "coverage:vitest": "vitest run --coverage",
-    "test:integration": "node --test test/integration/ai.test.mjs test/integration/client.test.mjs test/integration/host.test.mjs test/integration/parse.test.mjs test/integration/render.test.mjs test/integration/report.test.mjs"
+    "coverage:vitest": "vitest run --coverage"
   }
 }

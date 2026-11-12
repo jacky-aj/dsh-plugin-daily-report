@@ -8,6 +8,9 @@ import { collectReport } from "../../lib/collect.js";
 import { analyzeReport, aiInfo, buildAiPrompt } from "../../lib/ai.js";
 import { buildCsvReport, buildHtmlReport, buildMarkdownReport } from "../../lib/formats.js";
 import { buildReportWorkbook, summarizeReport } from "../../lib/report.js";
+import { test } from "vitest";
+
+test("ai integration", async () => {
 
 const root = mkdtempSync(join(tmpdir(), "daily-report-ai-"));
 const repo = join(root, "repo");
@@ -150,3 +153,5 @@ console.log(JSON.stringify({ ok: true, promptChars: prompt.length, workbookBytes
 rmSync(root, { recursive: true, force: true });
 
 
+
+});

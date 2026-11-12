@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { test } from "vitest";
+
+test("render integration", async () => {
 
 const pageZh = JSON.parse(readFileSync(new URL("../../locale/page.zh.json", import.meta.url), "utf8"));
 const pageEn = JSON.parse(readFileSync(new URL("../../locale/page.en.json", import.meta.url), "utf8"));
@@ -293,3 +296,5 @@ console.log(JSON.stringify({ ok: true, root: tree.props.className, title: dictio
 
 
 
+
+});
