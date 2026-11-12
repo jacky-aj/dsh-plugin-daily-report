@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 
-import { apply } from "../index.js";
+import { apply } from "../../index.js";
 
 const root = mkdtempSync(join(tmpdir(), "daily-report-host-"));
 process.env.DSH_HOME = join(root, "home");
@@ -220,13 +220,92 @@ assert.equal(testedPayload.sources.length, 2);
 const cancelled = await request("/daily-report/job/cancel", "POST", { jobId: startPayload.jobId });
 assert.equal(cancelled.status, 200);
 
+const locales = await request("/daily-report/locales", "GET");
+assert.equal(locales.status, 200);
+const localePayload = JSON.parse(locales.body.toString("utf8"));
+assert.ok(localePayload.zh["page.title"]);
+assert.ok(localePayload.en["page.title"]);
+
 const scheduleStatus = await request("/daily-report/schedule/status", "GET");
-assert.equal(scheduleStatus.status, 200);
-const scheduleRun = await request("/daily-report/schedule/run", "POST", {});
+assert.equal(scheduleStatus.status, 200);const scheduleRun = await request("/daily-report/schedule/run", "POST", {});
 assert.equal(scheduleRun.status, 200);
 const scheduleRunPayload = JSON.parse(scheduleRun.body.toString("utf8"));
 assert.equal(scheduleRunPayload.ok, true);
 assert.ok(scheduleRunPayload.filename);
+
+const invalidFile = await request("/daily-report/schedule/file?name=..%2Fsecret.xlsx", "GET");
+assert.equal(invalidFile.status, 400);
+const missingFile = await request("/daily-report/schedule/file?name=missing.xlsx", "GET");
+assert.equal(missingFile.status, 404);
+const missingJob = await request("/daily-report/job/export", "POST", { jobId: "missing" });
+assert.equal(missingJob.status, 404);
+const missingCancel = await request("/daily-report/job/cancel", "POST", { jobId: "missing" });
+assert.equal(missingCancel.status, 404);
+const noSourcesTest = await request("/daily-report/test-sources", "POST", { settings: { git: [], docs: [] } });
+assert.equal(noSourcesTest.status, 400);
+const emptyScan = await request("/daily-report/scan", "POST", { directory: "" });
+assert.equal(emptyScan.status, 400);
+const badMethod = await request("/daily-report/locales", "POST", {});
+assert.equal(badMethod.status, 405);
+const badStateMethod = await request("/daily-report/state", "DELETE");
+assert.equal(badStateMethod.status, 405);
+const badPreview = await request("/daily-report/job/preview?jobId=missing", "GET");
+assert.equal(badPreview.status, 404);
+const badJobFile = await request("/daily-report/job/file?jobId=missing", "GET");
+assert.equal(badJobFile.status, 404);
+const badRegenerate = await request("/daily-report/job/regenerate-day", "POST", { jobId: "missing", date: "2026-11-01" });
+assert.equal(badRegenerate.status, 404);
+const badRange = await request("/daily-report/generate", "POST", {
+  settings: { git: [{ location: repo, branch: "main" }], docs: [] },
+  start: "bad",
+  end: "2026-11-30",
+});
+assert.equal(badRange.status, 400);
+const noSourcesGenerate = await request("/daily-report/generate", "POST", {
+  settings: { git: [], docs: [] },
+  start: "2026-11-01",
+  end: "2026-11-30",
+});
+assert.equal(noSourcesGenerate.status, 400);
+const historyFile = await request(
+  "/daily-report/schedule/file?name=" + encodeURIComponent(scheduleRunPayload.filename),
+  "GET",
+);
+assert.equal(historyFile.status, 200);
+const emptySettings = await request("/daily-report/state", "PUT", { settings: { git: [], docs: [] } });
+assert.equal(emptySettings.status, 200);
+const noSourcesSchedule = await request("/daily-report/schedule/run", "POST", {});
+assert.equal(noSourcesSchedule.status, 400);
+for (const [route, method] of [
+  ["/daily-report/schedule/status", "POST"],
+  ["/daily-report/schedule/file?name=x.xlsx", "POST"],
+  ["/daily-report/test-sources", "GET"],
+  ["/daily-report/scan", "GET"],
+  ["/daily-report/job/cancel", "GET"],
+  ["/daily-report/job/export", "GET"],
+  ["/daily-report/job", "POST"],
+  ["/daily-report/job/preview", "POST"],
+  ["/daily-report/job/regenerate-day", "GET"],
+  ["/daily-report/job/file", "POST"],
+]) {
+  const response = await request(route, method, {});
+  assert.equal(response.status, 405, route + " " + method);
+}
+const badStart = await request("/daily-report/generate/start", "POST", {
+  settings: { git: [{ location: repo, branch: "main" }], docs: [] },
+  start: "bad",
+  end: "2026-11-30",
+});
+assert.equal(badStart.status, 202);
+const badJobId = JSON.parse(badStart.body.toString("utf8")).jobId;
+let badJob = null;
+for (let attempt = 0; attempt < 40; attempt += 1) {
+  badJob = await request("/daily-report/job?jobId=" + encodeURIComponent(badJobId), "GET");
+  const payload = JSON.parse(badJob.body.toString("utf8"));
+  if (payload.status === "failed" || payload.status === "done") break;
+  await new Promise((resolve) => setTimeout(resolve, 50));
+}
+assert.equal(JSON.parse(badJob.body.toString("utf8")).status, "failed");
 
 const toolResult = await tools[0].execute(
   { start: "2026-11-01", end: "2026-11-30", git: [{ location: repo, branch: "main" }], docs: [notes] },
@@ -238,6 +317,14 @@ const rendered = tools[0].output.render({}, toolResult);
 assert.equal(rendered[0].type, "text");
 assert.match(rendered[0].text, /日报已生成/);
 
+await assert.rejects(() =>
+  tools[0].execute({ start: "bad", end: "2026-11-30" }, { agent: { id: "test" }, signal: new AbortController().signal }),
+);
+await assert.rejects(() =>
+  tools[0].execute({ start: "2026-11-01", end: "2026-11-30", git: [], docs: [] }, { agent: { id: "test" }, signal: new AbortController().signal }),
+);
+
 console.log(JSON.stringify({ ok: true, state: state.defaults, stats: summary.stats, tool: toolResult.outputFile }, null, 2));
 for (const dispose of cleanups) dispose();
 rmSync(root, { recursive: true, force: true });
+

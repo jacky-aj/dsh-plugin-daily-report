@@ -134,15 +134,89 @@ Git 仓库、文档、AI 分析开关、作者过滤、格式、日期范围和�
 | 文件 | 作用 |
 |---|---|
 | `index.js` | Host 半侧：本地 HTTP 接口、设置持久化、`daily_report` 工具 |
-| `client.js` | Web 半侧：左侧全局入口、中栏独立日报页面、预览编辑与导出 |
+| `client.js` | Web 半侧：由 `src/client` 构建生成的最终 Client 产物 |
+| `src/client/index.jsx` | Web 半侧 ESM 入口 |
+| `src/client/app.jsx` | 状态、数据请求与页面组合 |
+| `src/client/styles.css` | 页面样式 |
+| `src/client/components/*.jsx` | Button、Switch、Card 等基础组件 |
+| `src/client/hooks/*.js` | 设置、数据源、生成、预览、定时等 hooks |
+| `src/client/views/*.jsx` | 时间范围、AI、定时生成、数据源、预览等页面区块 |
+| `locale/page.zh.json` | Web 页面中文文案 |
+| `locale/page.en.json` | Web 页面英文文案 |
+| `scripts/build-client.mjs` | 将 ESM Client bundle 为 DSH 产物 |
 | `lib/collect.js` | Git 日志、作者过滤、文档扫描、按天归集、仓库目录扫描 |
 | `lib/ai.js` | AI 提示词、按天分析、增量缓存、单日重新分析 |
 | `lib/report.js` | XLSX 工作表内容与样式 |
 | `lib/formats.js` | Markdown、CSV、HTML 日报渲染 |
+| `lib/i18n.js` | Host 侧多语言查找与插值 |
+| `lib/locales/zh.js` | Host 报表、格式、AI 提示文案 |
+| `lib/locales/en.js` | Host 英文文案 |
 | `lib/xlsx.js` | 无第三方依赖的 XLSX（ZIP + SpreadsheetML）写入器 |
 | `cordis.patch.yml` | 插入 `daily-report` 插件行 |
 | `locale/*.json` | 插件管理器展示文案 |
 | `icon.svg` | 插件图标 |
+
+## 开发
+
+Web 页面源码在 `src/client/`，使用 JSX + ESM 编写；`client.js` 是构建产物，不要直接修改。页面文案放在 `locale/page.zh.json` 和 `locale/page.en.json`，由 Host 的 `/daily-report/locales` 接口提供给 Client，不再打进 `client.js`。
+
+```powershell
+npm install
+npm run build
+```
+
+`npm publish` 前会自动执行构建。React 由 DSH 提供，不重复打包。
+
+### 测试
+
+```powershell
+npm test
+npm run test:integration
+npm run test:coverage
+npm run check
+```
+
+- `npm test`：Vitest 单测
+- `npm run test:integration`：Node 集成测试
+- `npm run test:coverage`：Vitest 全量覆盖率
+- `npm run check`：构建 + ESLint + 集成测试 + 全量覆盖率
+
+测试目录：
+
+```text
+test/unit/         Vitest 单测
+test/integration/  Node 集成测试
+test/fixtures/     静态测试输入
+```
+
+全量覆盖率：
+
+```text
+All files               lines 87.18%  functions 81.09%  branches 62.14%
+Vitest  src/client/**   lines 92.29%  functions 89.47%  branches 58.09%
+Vitest  lib/**          lines 86.31%  functions 94.39%  branches 66.57%
+Vitest  index.js        lines 81.87%  functions 88.09%  branches 56.00%
+```
+
+Vitest 门槛：
+
+```text
+lines      85%
+statements 85%
+functions  80%
+branches   60%
+```
+
+Vitest 门槛：
+
+```text
+lines      85%
+statements 85%
+functions  80%
+branches   60%
+```
+
+`index.js` 的 Host 路由仍由 Node 集成测试覆盖，尚未纳入 Vitest 85% 门槛。
 
 ## 说明与边界
 
@@ -153,3 +227,5 @@ Git 仓库、文档、AI 分析开关、作者过滤、格式、日期范围和�
 - AI 分析会读取每个仓库前 60 条提交的代码 diff 片段（每条最多约 1200 字符），并使用当前默认模型；会产生额外的生成时间和 token 消耗。模型调用失败时仍会生成普通日报，并在提示中说明失败原因。
 - AI 缓存只复用未变化的日期；提交、diff、文档摘要或模型变化后会重新分析对应日期。
 - 所有处理在本机完成，不上传仓库或文档内容；启用 AI 分析时，会把上述有界摘要发送给当前配置的模型服务。
+
+

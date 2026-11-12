@@ -4,10 +4,10 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { collectReport } from "../lib/collect.js";
-import { analyzeReport, aiInfo, buildAiPrompt } from "../lib/ai.js";
-import { buildCsvReport, buildHtmlReport, buildMarkdownReport } from "../lib/formats.js";
-import { buildReportWorkbook, summarizeReport } from "../lib/report.js";
+import { collectReport } from "../../lib/collect.js";
+import { analyzeReport, aiInfo, buildAiPrompt } from "../../lib/ai.js";
+import { buildCsvReport, buildHtmlReport, buildMarkdownReport } from "../../lib/formats.js";
+import { buildReportWorkbook, summarizeReport } from "../../lib/report.js";
 
 const root = mkdtempSync(join(tmpdir(), "daily-report-ai-"));
 const repo = join(root, "repo");
@@ -140,6 +140,13 @@ assert.match(csv, /^﻿"日期"/);
 const html = buildHtmlReport(result);
 assert.match(html, /<html lang="zh-CN">/);
 assert.match(html, /实现登录校验/);
-writeFileSync(new URL("./fixtures/ai-sample.xlsx", import.meta.url), workbook);
+const englishMarkdown = buildMarkdownReport({ ...result, locale: "en" });
+assert.match(englishMarkdown, /# Daily report/);
+assert.doesNotMatch(englishMarkdown, /日报汇总/);
+const englishHtml = buildHtmlReport({ ...result, locale: "en" });
+assert.match(englishHtml, /<html lang="en">/);
+assert.match(englishHtml, /Daily summary/);
 console.log(JSON.stringify({ ok: true, promptChars: prompt.length, workbookBytes: workbook.length, ai: summary.ai }, null, 2));
 rmSync(root, { recursive: true, force: true });
+
+

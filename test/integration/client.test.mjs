@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const code = readFileSync(new URL("../client.js", import.meta.url), "utf8");
+const pageZh = JSON.parse(readFileSync(new URL("../../locale/page.zh.json", import.meta.url), "utf8"));
+const pageEn = JSON.parse(readFileSync(new URL("../../locale/page.en.json", import.meta.url), "utf8"));
+globalThis.fetch = async () => ({ ok: true, json: async () => ({ zh: pageZh, en: pageEn }) });
+
+const code = readFileSync(new URL("../../client.js", import.meta.url), "utf8");
 let captured = null;
 globalThis.window = {
   __ModuleLoader__: {
@@ -25,6 +29,12 @@ const dictionaries = {};
 const ReactMock = {
   createElement() {
     return { type: "mock" };
+  },
+  createContext() {
+    return { Provider: () => null };
+  },
+  useContext() {
+    return null;
   },
   useState(initial) {
     return [typeof initial === "function" ? initial() : initial, () => {}];
@@ -72,6 +82,7 @@ const plugin = captured.factory((name) => {
 });
 assert.deepEqual(plugin.inject, ["slots", "locale"]);
 plugin.apply(ctx);
+await new Promise((resolve) => setTimeout(resolve, 0));
 
 assert.equal(registrations.length, 2);
 assert.deepEqual(
@@ -85,3 +96,4 @@ assert.ok(dictionaries["daily-report"].zh["page.title"]);
 assert.ok(dictionaries["daily-report"].en["page.title"]);
 
 console.log(JSON.stringify({ ok: true, slots: registrations.map((item) => item.options.name) }));
+

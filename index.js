@@ -9,6 +9,7 @@ import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   collectReport,
@@ -26,6 +27,7 @@ import { buildReportWorkbook, reportFileName, summarizeReport, buildReportPrevie
 export const inject = ["webServer"];
 
 const ROUTE_STATE = "/daily-report/state";
+const ROUTE_LOCALES = "/daily-report/locales";
 const ROUTE_GENERATE = "/daily-report/generate";
 const ROUTE_START = "/daily-report/generate/start";
 const ROUTE_JOB = "/daily-report/job";
@@ -42,6 +44,7 @@ const ROUTE_SCHEDULE_RUN = "/daily-report/schedule/run";
 const MAX_BODY = 2 * 1024 * 1024;
 const MAX_RANGE_DAYS = 366;
 const JOB_TTL = 60 * 60 * 1000;
+const PACKAGE_ROOT = dirname(fileURLToPath(import.meta.url));
 const MAX_JOBS = 20;
 const jobs = new Map();
 const REPORT_FORMATS = new Set(["xlsx", "markdown", "csv", "html"]);
@@ -735,6 +738,29 @@ function registerTool(ctx) {
 }
 
 export function apply(ctx) {
+  registerRoute(
+    ctx,
+    ROUTE_LOCALES,
+    async (req, res) => {
+      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
+      if (req.method !== "GET") {
+        res.setHeader("allow", "GET");
+        return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
+      }
+      try {
+        const [zh, en] = await Promise.all([
+          fs.readFile(join(PACKAGE_ROOT, "locale", "page.zh.json"), "utf8"),
+          fs.readFile(join(PACKAGE_ROOT, "locale", "page.en.json"), "utf8"),
+        ]);
+        res.setHeader("cache-control", "no-store");
+        return sendJson(res, 200, { zh: JSON.parse(zh), en: JSON.parse(en) });
+      } catch (error) {
+        return sendError(res, 500, "locale-failed", "读取页面语言资源失败。");
+      }
+    },
+    "daily-report: locale resources route",
+  );
+
   registerRoute(
     ctx,
     ROUTE_STATE,

@@ -1,3 +1,10 @@
 # Local npm publish credentials and packed artifacts
 .npmrc
 *.tgz
+
+# Build tooling
+node_modules/
+package-lock.json
+
+# Test output
+coverage/

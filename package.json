@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-daily-report",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "月底不知道干了哪些活？自动汇总多个 Git 仓库、分支与本地文档，AI 分析并导出 XLSX/Markdown/CSV/HTML 日报。",
   "license": "MIT",
   "type": "module",
@@ -15,7 +15,7 @@
     "index.js",
     "client.js",
     "cordis.patch.yml",
-    "lib/*.js",
+    "lib/**/*.js",
     "locale/*.json",
     "icon.svg",
     "README.md"
@@ -54,5 +54,26 @@
         "@deepseek-ai/dsh-client-locale"
       ]
     }
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.3",
+    "@vitest/coverage-v8": "^3.2.7",
+    "esbuild": "^0.25.12",
+    "eslint": "^8.57.0",
+    "jsdom": "^26.1.0",
+    "prettier": "^3.10.0",
+    "react": "^19.3.1",
+    "vitest": "^3.2.7"
+  },
+  "scripts": {
+    "build": "node scripts/build-client.mjs",
+    "prepublishOnly": "npm run build",
+    "lint": "eslint client.js index.js lib/**/*.js",
+    "test": "vitest run",
+    "check": "npm run build && npm run lint && npm run test:integration && npm run coverage:vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:vitest": "vitest run",
+    "coverage:vitest": "vitest run --coverage",
+    "test:integration": "node --test test/integration/ai.test.mjs test/integration/client.test.mjs test/integration/host.test.mjs test/integration/parse.test.mjs test/integration/render.test.mjs test/integration/report.test.mjs"
   }
 }
