@@ -4,7 +4,7 @@ import { API } from "../helpers.js";
 import { Card } from "../components/Card.jsx";
 import { Button } from "../components/Button.jsx";
 import { Switch } from "../components/Switch.jsx";
-import { InfoDot, PlayIcon, RefreshIcon } from "../icons.jsx";
+import { PlayIcon, RefreshIcon } from "../icons.jsx";
 
 export function ScheduleCard() {
   const {
@@ -22,16 +22,8 @@ export function ScheduleCard() {
     <Card>
       <div className="dsdr-card-head">
         <div>
-          <div className="dsdr-title-with-info">
-            <div className="dsdr-card-title">
-              {t("schedule.title", "定时自动生成")}
-            </div>
-            <InfoDot
-              text={t(
-                "schedule.desc",
-                "在 DSH 运行期间按设定时间自动生成报告，并保存到本地历史目录。",
-              )}
-            />
+          <div className="dsdr-card-title">
+            {t("schedule.title", "定时汇总")}
           </div>
         </div>
         <Switch

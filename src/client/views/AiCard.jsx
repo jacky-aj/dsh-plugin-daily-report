@@ -17,7 +17,7 @@ export function AiCard() {
             <InfoDot
               text={t(
                 "ai.desc",
-                "使用当前默认模型分析提交说明、代码变更和文档摘要，生成按天简要总结。",
+                "使用 AI 模型基于数据源内容总结概括，生成日报内容。",
               )}
             />
           </div>

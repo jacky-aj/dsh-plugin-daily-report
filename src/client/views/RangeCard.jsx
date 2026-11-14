@@ -2,7 +2,6 @@ import React from "react";
 import { useApp } from "../context.jsx";
 import { Card } from "../components/Card.jsx";
 import { currentMonthRange, last7Range, lastMonthRange, thisWeekRange, yesterdayRange } from "../helpers.js";
-import { InfoDot } from "../icons.jsx";
 
 export function RangeCard() {
   const { range, setRange, rangeDays, t } = useApp();
@@ -10,13 +9,8 @@ export function RangeCard() {
     <Card>
       <div className="dsdr-card-head">
         <div>
-          <div className="dsdr-title-with-info">
-            <div className="dsdr-card-title">
-              {t("range.title", "汇总时间范围")}
-            </div>
-            <InfoDot
-              text={t("range.desc", "默认当月月初到月底；可改为任意日期范围。")}
-            />
+          <div className="dsdr-card-title">
+            {t("range.title", "汇总时间范围")}
           </div>
         </div>
         <div className="dsdr-hint">

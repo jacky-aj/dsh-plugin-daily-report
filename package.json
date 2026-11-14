@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-daily-report",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "月底不知道干了哪些活？自动汇总多个 Git 仓库、分支与本地文档，AI 分析并导出 XLSX/Markdown/CSV/HTML 日报。",
   "license": "MIT",
   "type": "module",
@@ -77,6 +77,7 @@
     "check": "npm run build && npm run lint && npm run coverage:vitest",
     "test:coverage": "vitest run --coverage",
     "test:vitest": "vitest run",
-    "coverage:vitest": "vitest run --coverage"
+    "coverage:vitest": "vitest run --coverage",
+    "sync:plugin": "node scripts/sync-to-profile.mjs"
   }
 }

@@ -14,6 +14,7 @@ export function DailyReportPage() {
     loadError,
     error,
     result,
+    showToast,
     saveText,
     saveState,
     saveSettingsNow,
@@ -331,7 +332,14 @@ export function DailyReportPage() {
               <button
                 type="button"
                 className="dsdr-btn dsdr-btn-primary"
-                onClick={() => triggerDownload(result.url, result.filename)}
+                onClick={() => {
+                  triggerDownload(result.url, result.filename);
+                  if (typeof showToast === "function") {
+                    showToast(
+                      t("toast.exported", "已导出：") + (result.filename || ""),
+                    );
+                  }
+                }}
               >
                 {t("result.download", "下载 XLSX")}
               </button>

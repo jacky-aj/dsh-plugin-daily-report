@@ -115,6 +115,79 @@ describe("view interactions", () => {
     expect(screen.getByText("repo", { exact: false })).toBeTruthy();
   });
 
+  it("asks before unchecking mine-only and keeps it when cancelled", async () => {
+    const setSettings = vi.fn();
+    const confirm = vi.fn(async () => false);
+    const app = {
+      settings: { git: [], docs: [], mineOnly: true, excludeMerges: true },
+      setSettings,
+      updateGit: vi.fn(),
+      removeGit: vi.fn(),
+      addGit: vi.fn(),
+      updateDoc: vi.fn(),
+      removeDoc: vi.fn(),
+      addDoc: vi.fn(),
+      showScan: false,
+      scanDir: "",
+      setScanDir: vi.fn(),
+      scanAndAdd: vi.fn(),
+      scanning: false,
+      scanError: "",
+      scanMessage: "",
+      pickScanDirectory: vi.fn(),
+      toggleScan: vi.fn(),
+      testSources: vi.fn(),
+      testingSources: false,
+      testError: "",
+      testResults: [],
+      dataSourceTab: "git",
+      setDataSourceTab: vi.fn(),
+      confirm,
+      t,
+    };
+    render(withApp(app, <DataSourceCard />));
+    const mine = screen.getByLabelText("仅统计我的提交");
+    fireEvent.click(mine);
+    await waitFor(() => expect(confirm).toHaveBeenCalled());
+    expect(setSettings).not.toHaveBeenCalled();
+  });
+
+  it("unchecks mine-only after confirming", async () => {
+    const setSettings = vi.fn();
+    const app = {
+      settings: { git: [], docs: [], mineOnly: true, excludeMerges: true },
+      setSettings,
+      updateGit: vi.fn(),
+      removeGit: vi.fn(),
+      addGit: vi.fn(),
+      updateDoc: vi.fn(),
+      removeDoc: vi.fn(),
+      addDoc: vi.fn(),
+      showScan: false,
+      scanDir: "",
+      setScanDir: vi.fn(),
+      scanAndAdd: vi.fn(),
+      scanning: false,
+      scanError: "",
+      scanMessage: "",
+      pickScanDirectory: vi.fn(),
+      toggleScan: vi.fn(),
+      testSources: vi.fn(),
+      testingSources: false,
+      testError: "",
+      testResults: [],
+      dataSourceTab: "git",
+      setDataSourceTab: vi.fn(),
+      confirm: async () => true,
+      t,
+    };
+    render(withApp(app, <DataSourceCard />));
+    fireEvent.click(screen.getByLabelText("仅统计我的提交"));
+    await waitFor(() => expect(setSettings).toHaveBeenCalled());
+    const updater = setSettings.mock.calls[0][0];
+    expect(updater({ mineOnly: true }).mineOnly).toBe(false);
+  });
+
   it("edits and adds local documents", () => {
     const updateDoc = vi.fn();
     const addDoc = vi.fn();

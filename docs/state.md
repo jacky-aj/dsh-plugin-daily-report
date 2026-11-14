@@ -5,14 +5,16 @@
 ## 版本
 
 ```text
-版本号：1.1.1
-npm：已发布 1.1.1
-最新提交：本次 1.1.1 发布提交
+版本号：1.1.2
+npm：已发布 1.1.2
+最新提交：本次 1.1.2 发布提交
 ```
 
-当前 npm latest：1.1.1。
+当前 npm latest：1.1.2。
 
 ## 当前状态
+
+- 本地调试策略：profile 保持 npm 安装，不用 link；改完代码 `npm run build && npm run sync:plugin` 同步到已安装目录（见 `docs/runbooks/local-debug.md`）。
 
 - Host / Client 已分离。
 - Client 已迁移为 ESM + esbuild bundle。
@@ -44,19 +46,23 @@ Vitest tests：63 passed
 - `index.js` 仍有一些 Host 错误分支未覆盖。
 - `lib/ai.js`、`lib/collect.js` 的失败分支覆盖率偏低。
 - `test/integration/render.spec.mjs` 依赖 `useState` 调用顺序，新增 Hook 后需要调整索引。
+- 从 npm 安装时若 profile 中残留旧的本地 junction，会报 EPERM；处理方式见 `docs/troubleshooting.md`。
 - 确认框使用内联背景色，后续如果接入完整主题系统需要重新评估。
+
 
 ## 下一步建议
 
-1. 提交并发布二次确认改动前，先人工验证：
-   - 删除仓库 / 文档
-   - 关闭 AI
-   - 切换模型
-   - 导入设置
-   - 启用定时生成
-2. 继续提升 Host 路由和 lib 失败分支覆盖率。
-3. 评估是否把 `test/integration/render.spec.mjs` 改为更稳定的状态注入方式。
-4. 为确认框补充键盘 Esc / 焦点管理。
+1. 继续提升 Host 路由和 lib 失败分支覆盖率。
+2. 评估是否把 `test/integration/render.spec.mjs` 改为更稳定的状态注入方式。
+3. 考虑为确认框补键盘 Esc 与焦点管理。
+
+
+
+
+
+
+
+
 
 
 

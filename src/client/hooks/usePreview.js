@@ -8,6 +8,7 @@ export function usePreview({
   setError,
   t,
   errorMessageFromPayload,
+  showToast,
 }) {
   const [preview, setPreview] = React.useState(null);
   const [previewJobId, setPreviewJobId] = React.useState("");
@@ -156,6 +157,9 @@ export function usePreview({
         window.URL.revokeObjectURL(resultRef.current.url);
       setResult(next);
       triggerDownload(url, filename);
+      if (typeof showToast === "function") {
+        showToast(t("toast.exported", "已导出：") + filename);
+      }
     } catch (err) {
       setError(
         err && err.message ? err.message : t("error.generate", "导出失败"),

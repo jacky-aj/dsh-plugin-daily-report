@@ -6,7 +6,7 @@
 
 `dsh-plugin-daily-report`：DSH 日报插件。汇总多个 Git 仓库、分支和本地文档，生成按天日报，支持 AI 分析、预览编辑和 XLSX / Markdown / CSV / HTML 导出。
 
-当前版本：`1.1.1`。
+当前版本：`1.1.2`。
 仓库：`https://gitee.com/yuanjiegit/dsh-plugin-daily-report`
 
 ## 每次会话开始
@@ -31,6 +31,7 @@ npm run check
 - Host 路由和工具在 `index.js`，业务逻辑在 `lib/`。
 - 测试统一使用 Vitest：`test/unit/` 和 `test/integration/`。
 - 修改行为后同步更新 `docs/state.md`；架构或取舍变化时新增 ADR。
+- 本地调试不使用 `link` / junction：profile 保持从 npm 安装，改完代码用 `npm run sync:plugin` 同步到已安装目录，详见 `docs/runbooks/local-debug.md`。
 - 不要主动 commit、push 或 publish，除非用户明确要求。
 - 不掩盖测试发现的问题。测试失败先判断是产品代码 bug 还是测试假设错误。
 - 覆盖率门槛不能为了通过而调低。
@@ -42,6 +43,7 @@ npm run build        # 构建 client.js
 npm test             # 全部 Vitest 单测和集成测试
 npm run test:coverage
 npm run check        # build + lint + 覆盖率
+npm run sync:plugin  # 把构建产物同步到已安装的 npm 包目录
 ```
 
 ## 架构地图
@@ -94,5 +96,8 @@ test/integration/        Vitest 集成测试
 3. 行为变化更新 `CHANGELOG.md`。
 4. 架构取舍变化新增 `docs/decisions/NNNN-*.md`。
 5. 不主动提交或发布。
+
+
+
 
 

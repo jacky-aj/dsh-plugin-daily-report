@@ -24,6 +24,7 @@ describe("remaining ESM hooks", () => {
   it("edits and exports a preview", async () => {
     const setResult = vi.fn();
     const setError = vi.fn();
+    const showToast = vi.fn();
     const resultRef = { current: null };
     vi.stubGlobal("URL", {
       createObjectURL: () => "blob:test",
@@ -38,7 +39,15 @@ describe("remaining ESM hooks", () => {
       })),
     );
     const { result } = renderHook(() =>
-      usePreview({ exportFormat: "xlsx", setResult, resultRef, setError, t, errorMessageFromPayload: () => "error" }),
+      usePreview({
+        exportFormat: "xlsx",
+        setResult,
+        resultRef,
+        setError,
+        t,
+        errorMessageFromPayload: () => "error",
+        showToast,
+      }),
     );
     act(() =>
       result.current.setPreview({
@@ -56,6 +65,7 @@ describe("remaining ESM hooks", () => {
     expect(result.current.expandedPreviewDays["2026-11-01"]).toBe(true);
     await act(async () => result.current.exportPreview());
     expect(setResult).toHaveBeenCalled();
+    expect(showToast).toHaveBeenCalledWith(expect.stringContaining("已导出"));
   });
 
   it("saves, exports and imports settings", async () => {

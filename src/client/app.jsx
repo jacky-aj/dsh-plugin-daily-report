@@ -13,7 +13,9 @@ import { useDataSources } from "./hooks/useDataSources.js";
 import { usePreview } from "./hooks/usePreview.js";
 import { useGeneration } from "./hooks/useGeneration.js";
 import { useConfirm } from "./hooks/useConfirm.js";
+import { useToast } from "./hooks/useToast.js";
 import { ConfirmDialog } from "./components/ConfirmDialog.jsx";
+import { Toast } from "./components/Toast.jsx";
 export function DailyReportView(props) {
   const ctx = props.ctx;
   const t = useTranslate(ctx);
@@ -43,6 +45,7 @@ export function DailyReportView(props) {
     settingsFileRef,
   } = useMenus();
   const { confirm, dialogProps } = useConfirm();
+  const { toast, showToast, dismissToast } = useToast();
   const [error, setError] = React.useState("");
   const [result, setResult] = React.useState(null);
   const resultRef = React.useRef(null);
@@ -143,6 +146,7 @@ export function DailyReportView(props) {
     setError,
     t,
     errorMessageFromPayload,
+    showToast,
   });
   const { generating, progress, generate, cancelGeneration } =
     useGeneration({
@@ -300,6 +304,7 @@ export function DailyReportView(props) {
     generate,
     cancelGeneration,
     confirm,
+    showToast,
     t,
   };
   setApp(app);
@@ -307,6 +312,7 @@ export function DailyReportView(props) {
     <AppContext.Provider value={app}>
       <DailyReportPage />
       <ConfirmDialog {...dialogProps} />
+      <Toast toast={toast} onDismiss={dismissToast} />
     </AppContext.Provider>
   );
 }

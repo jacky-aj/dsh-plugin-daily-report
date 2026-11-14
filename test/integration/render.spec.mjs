@@ -103,6 +103,9 @@ const ReactMock = {
   useId() {
     return "dsdr-confirm-title";
   },
+  useCallback(fn) {
+    return fn;
+  },
   useState(initial) {
     stateIndex += 1;
     if (stateIndex === 9) return [true, () => {}];
@@ -110,12 +113,12 @@ const ReactMock = {
     if (stateIndex === 5) return [{ available: true, provider: "test", model: "mock-model" }, () => {}];
     if (stateIndex === 6) return [true, () => {}];
     if (stateIndex === 7) return [false, () => {}];
-    if (stateIndex === 18) return [true, () => {}];
-    if (stateIndex === 19) return ["D:/repos", () => {}];
-    if (stateIndex === 28) return ["job-1", () => {}];
-    if (stateIndex === 34) return [true, () => {}];
-    if (stateIndex === 35) return [{ percent: 78, indeterminate: true, message: "模型正在生成分析…" }, () => {}];
-    if (stateIndex === 13) {
+    if (stateIndex === 19) return [true, () => {}];
+    if (stateIndex === 20) return ["D:/repos", () => {}];
+    if (stateIndex === 29) return ["job-1", () => {}];
+    if (stateIndex === 35) return [true, () => {}];
+    if (stateIndex === 36) return [{ percent: 78, indeterminate: true, message: "模型正在生成分析…" }, () => {}];
+    if (stateIndex === 14) {
       return [
         {
           filename: "demo.xlsx",
@@ -128,7 +131,7 @@ const ReactMock = {
         () => {},
       ];
     }
-    if (stateIndex === 27) {
+    if (stateIndex === 28) {
       return [
         {
           range: { start: "2026-11-01", end: "2026-11-30" },
@@ -150,7 +153,7 @@ const ReactMock = {
         () => {},
       ];
     }
-    if (stateIndex === 33) return [{ "2026-11-02": true }, () => {}];
+    if (stateIndex === 34) return [{ "2026-11-02": true }, () => {}];
     return [typeof initial === "function" ? initial() : initial, () => {}];
   },
   useEffect() {},

@@ -90,7 +90,7 @@ describe("ESM views and components", () => {
         <ScheduleCard />,
       ),
     );
-    expect(screen.getByText("定时自动生成")).toBeTruthy();
+    expect(screen.getByText("定时汇总")).toBeTruthy();
     expect(screen.getByRole("button", { name: /立即运行一次/ })).toBeTruthy();
     expect(screen.getByRole("button", { name: /刷新状态/ })).toBeTruthy();
   });
@@ -274,5 +274,6 @@ describe("ESM views and components", () => {
     expect(screen.getByText("AI 分析")).toBeTruthy();
   });
 });
+
 
 

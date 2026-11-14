@@ -27,6 +27,7 @@ export function DataSourceCard() {
     testResults,
     dataSourceTab,
     setDataSourceTab,
+    confirm = async () => true,
     t,
   } = useApp();
   return (
@@ -41,7 +42,7 @@ export function DataSourceCard() {
               <InfoDot
                 text={t(
                   "datasource.desc",
-                  "统一管理 Git 仓库与本地文档，生成时合并到同一份日报。",
+                  "生成日报的内容来源，可以是 Git 仓库或本地文档。",
                 )}
               />
             </div>
@@ -121,16 +122,8 @@ export function DataSourceCard() {
       >
         <div className="dsdr-card-head">
           <div>
-            <div className="dsdr-title-with-info">
-              <div className="dsdr-card-title">
-                {t("git.title", "Git 仓库")}
-              </div>
-              <InfoDot
-                text={t(
-                  "git.desc",
-                  "支持远程地址或本地仓库；多个仓库、多个分支会合并到同一份日报。",
-                )}
-              />
+            <div className="dsdr-card-title">
+              {t("git.title", "Git 仓库")}
             </div>
           </div>
           <div className="dsdr-actions">
@@ -152,12 +145,25 @@ export function DataSourceCard() {
             <input
               type="checkbox"
               checked={settings.mineOnly !== false}
-              onChange={(event) =>
+              onChange={async (event) => {
+                const nextChecked = event.target.checked;
+                if (!nextChecked && settings.mineOnly !== false) {
+                  const accepted = await confirm({
+                    title: t("confirm.mineOnly.title", "统计全部作者的提交？"),
+                    message: t(
+                      "confirm.mineOnly.message",
+                      "取消后日报会包含所有作者的提交，提交量可能明显增加。",
+                    ),
+                    confirmLabel: t("confirm.mineOnly.confirm", "取消勾选"),
+                    cancelLabel: t("confirm.cancel", "取消"),
+                  });
+                  if (!accepted) return;
+                }
                 setSettings((previous) => ({
                   ...previous,
-                  mineOnly: event.target.checked,
-                }))
-              }
+                  mineOnly: nextChecked,
+                }));
+              }}
             />
             <span>{t("git.mine", "仅统计我的提交")}</span>
           </label>
@@ -310,16 +316,8 @@ export function DataSourceCard() {
       >
         <div className="dsdr-card-head">
           <div>
-            <div className="dsdr-title-with-info">
-              <div className="dsdr-card-title">
-                {t("docs.title", "本地文档")}
-              </div>
-              <InfoDot
-                text={t(
-                  "docs.desc",
-                  "文件或目录；目录会递归扫描 md、txt、docx、html 等笔记文件。",
-                )}
-              />
+            <div className="dsdr-card-title">
+              {t("docs.title", "本地文档")}
             </div>
           </div>
           <div className="dsdr-actions">
