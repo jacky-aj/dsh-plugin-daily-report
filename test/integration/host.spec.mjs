@@ -146,7 +146,10 @@ assert.ok(generate.body.length > 5000);
 const summary = JSON.parse(Buffer.from(generate.headers["x-report-summary"], "base64").toString("utf8"));
 assert.equal(summary.stats.commits, 1);
 assert.equal(summary.stats.docs, 1);
-assert.equal(generate.headers["x-report-filename"], encodeURIComponent("日报汇总_2026-11-01_2026-11-30.xlsx"));
+assert.match(
+  decodeURIComponent(generate.headers["x-report-filename"]),
+  /^日报汇总_2026-11-01_2026-11-30_\d{8}-\d{6}\.xlsx$/,
+);
 
 const startJob = await request("/daily-report/generate/start", "POST", {
   settings: {
@@ -230,11 +233,84 @@ assert.ok(localePayload.zh["page.title"]);
 assert.ok(localePayload.en["page.title"]);
 
 const scheduleStatus = await request("/daily-report/schedule/status", "GET");
-assert.equal(scheduleStatus.status, 200);const scheduleRun = await request("/daily-report/schedule/run", "POST", {});
+assert.equal(scheduleStatus.status, 200);
+
+// Scheduled catch-up: a stale last-run date must surface as pending work, and a
+// manual run must cover today so the pending count drops back to zero.
+const enableSchedule = await request("/daily-report/state", "PUT", {
+  settings: {
+    git: [{ location: repo, branch: "main", label: "本地仓库" }],
+    docs: [],
+    aiEnabled: false,
+    scheduleEnabled: true,
+    scheduleFrequency: "daily",
+    scheduleTime: "00:00",
+  },
+});
+assert.equal(enableSchedule.status, 200);
+const scheduleDir = join(root, "home", "daily-report");
+mkdirSync(scheduleDir, { recursive: true });
+const stale = new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10);
+writeFileSync(
+  join(scheduleDir, "schedule-state.json"),
+  JSON.stringify({ lastDaily: stale, lastWeekly: "", lastAt: "", lastFile: "", lastStatus: "ok" }),
+);
+const pendingStatus = await request("/daily-report/schedule/status", "GET");
+const pendingPayload = JSON.parse(pendingStatus.body.toString("utf8"));
+assert.ok(pendingPayload.pending >= 3, "expected pending catch-up runs, got " + pendingPayload.pending);
+assert.ok(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(pendingPayload.nextRunAt));
+
+const scheduleRun = await request("/daily-report/schedule/run", "POST", {});
 assert.equal(scheduleRun.status, 200);
 const scheduleRunPayload = JSON.parse(scheduleRun.body.toString("utf8"));
 assert.equal(scheduleRunPayload.ok, true);
-assert.ok(scheduleRunPayload.filename);
+assert.match(scheduleRunPayload.filename, /^日报汇总_\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}_\d{8}-\d{6}\.xlsx$/);
+assert.equal(scheduleRunPayload.status.pending, 0);
+
+// Cache clearing removes the AI summary cache and the bare repository cache.
+writeFileSync(join(scheduleDir, "ai-cache.json"), JSON.stringify({ version: 1, days: {}, overalls: {} }));
+mkdirSync(join(scheduleDir, "repos", "demo"), { recursive: true });
+writeFileSync(join(scheduleDir, "repos", "demo", "HEAD"), "ref: refs/heads/main\n");
+const cacheClear = await request("/daily-report/cache/clear", "POST", {});
+assert.equal(cacheClear.status, 200);
+const cachePayload = JSON.parse(cacheClear.body.toString("utf8"));
+assert.equal(cachePayload.ok, true);
+assert.equal(cachePayload.cleared.aiCache, true);
+assert.equal(cachePayload.cleared.repoCache, true);
+assert.equal(existsSync(join(scheduleDir, "ai-cache.json")), false);
+assert.equal(existsSync(join(scheduleDir, "repos")), false);
+// Clearing a cache that is already gone is still a success.
+const cacheClearAgain = await request("/daily-report/cache/clear", "POST", {});
+assert.equal(cacheClearAgain.status, 200);
+assert.equal(JSON.parse(cacheClearAgain.body.toString("utf8")).ok, true);
+
+// Resetting settings restores defaults and drops every configured source.
+const beforeReset = await request("/daily-report/state?sessionId=", "GET");
+assert.equal(JSON.parse(beforeReset.body.toString("utf8")).settings.git.length, 1);
+const resetSettings = await request("/daily-report/settings/reset", "POST", {});
+assert.equal(resetSettings.status, 200);
+const resetPayload = JSON.parse(resetSettings.body.toString("utf8"));
+assert.equal(resetPayload.ok, true);
+assert.deepEqual(resetPayload.settings.git, []);
+assert.deepEqual(resetPayload.settings.docs, []);
+assert.equal(resetPayload.settings.aiEnabled, true);
+assert.equal(resetPayload.settings.mineOnly, true);
+assert.equal(resetPayload.settings.excludeMerges, true);
+assert.equal(resetPayload.settings.scheduleEnabled, false);
+assert.equal(resetPayload.settings.format, "xlsx");
+assert.equal(resetPayload.settings.authorEmails, "");
+const afterReset = await request("/daily-report/state?sessionId=", "GET");
+const afterResetPayload = JSON.parse(afterReset.body.toString("utf8"));
+assert.deepEqual(afterResetPayload.settings.git, []);
+assert.equal(afterResetPayload.saved, true);
+
+for (const [route, method] of [
+  ["/daily-report/cache/clear", "GET"],
+  ["/daily-report/settings/reset", "GET"],
+]) {
+  const response = await request(route, method, {});
+  assert.equal(response.status, 405, route + " " + method);
+}
 
 const invalidFile = await request("/daily-report/schedule/file?name=..%2Fsecret.xlsx", "GET");
 assert.equal(invalidFile.status, 400);

@@ -56,7 +56,7 @@ npm run sync:plugin
 
 在插件管理器里把 `dsh-plugin-daily-report` 禁用再启用，然后刷新页面。
 
-Host 侧代码（`index.js`、`lib/**`）改动必须重载插件才生效；纯前端（`client.js`）改动刷新页面即可。
+Host 侧代码（`index.js`、`lib/**`）改动后，**禁用/启用插件不足以重新导入**：DSH 进程持有已加载的 ES 模块，必须重启 DSH 应用。纯前端（`client.js`）改动刷新页面即可。
 
 ## 同步范围
 
@@ -88,7 +88,7 @@ pnpm 用硬链接把包文件链接到全局 store。直接覆盖写入会穿透
 
 - 确认执行过 `npm run build`
 - 刷新页面（`Ctrl + F5`）
-- Host 代码改动需要禁用/启用插件
+- Host 代码改动（`index.js`、`lib/**`）必须重启 DSH 应用，禁用/启用插件不够
 
 ### 找不到已安装目录
 
@@ -109,3 +109,5 @@ node scripts/sync-to-profile.mjs "<目录>"
 ## 发版仍然照常
 
 同步只是本地验证手段，不会改变 profile 的依赖声明。正式发布走 `docs/runbooks/publish.md`，发布后在插件管理器里重新安装即可回到 npm 版本。
+
+

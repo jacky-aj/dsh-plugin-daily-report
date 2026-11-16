@@ -227,5 +227,44 @@ export function UploadIcon(props) {
     </svg>
   );
 }
-// __UI_PARTS__
+
+export function TrashIcon(props) {
+  const size = Number(props && props.size) > 0 ? Number(props.size) : 14;
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.9}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={true}
+    >
+      <path d="M4 7h16" />
+      <path d="M9 7V5h6v2" />
+      <path d="M6 7l1 13h10l1-13" />
+    </svg>
+  );
+}
+ export function ResetIcon(props) {
+  const size = Number(props && props.size) > 0 ? Number(props.size) : 14;
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.9}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={true}
+    >
+      <path d="M4 12a8 8 0 1 1 2.4 5.7" />
+      <path d="M4 19v-7h7" />
+    </svg>
+  );
+}
 

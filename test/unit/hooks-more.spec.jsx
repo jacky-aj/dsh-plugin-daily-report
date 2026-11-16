@@ -111,6 +111,178 @@ describe("remaining ESM hooks", () => {
     expect(setSettings).toHaveBeenCalled();
   });
 
+  it("clears the cache only after confirmation", async () => {
+    const confirm = vi.fn(async () => false);
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ ok: true }) }));
+    vi.stubGlobal("fetch", fetchMock);
+    const showToast = vi.fn();
+    const setError = vi.fn();
+    const { result } = renderHook(() =>
+      useSettingsTransfer({
+        settings: { git: [], docs: [] },
+        setSettings: vi.fn(),
+        useAi: true,
+        setUseAi: vi.fn(),
+        range: { start: "2026-11-01", end: "2026-11-30" },
+        setRange: vi.fn(),
+        exportFormat: "xlsx",
+        setExportFormat: vi.fn(),
+        loading: false,
+        setError,
+        setSettingsMenuOpen: vi.fn(),
+        confirm,
+        showToast,
+        t,
+      }),
+    );
+    await act(async () => result.current.clearCache());
+    expect(confirm).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "清除缓存？", danger: true }),
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(showToast).not.toHaveBeenCalled();
+    expect(setError).not.toHaveBeenCalled();
+  });
+
+  it("clears the cache and reports success", async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ ok: true }) }));
+    vi.stubGlobal("fetch", fetchMock);
+    const showToast = vi.fn();
+    const setError = vi.fn();
+    const { result } = renderHook(() =>
+      useSettingsTransfer({
+        settings: { git: [], docs: [] },
+        setSettings: vi.fn(),
+        useAi: true,
+        setUseAi: vi.fn(),
+        range: { start: "2026-11-01", end: "2026-11-30" },
+        setRange: vi.fn(),
+        exportFormat: "xlsx",
+        setExportFormat: vi.fn(),
+        loading: false,
+        setError,
+        setSettingsMenuOpen: vi.fn(),
+        confirm: async () => true,
+        showToast,
+        t,
+      }),
+    );
+    await act(async () => result.current.clearCache());
+    expect(String(fetchMock.mock.calls[0][0])).toContain("/cache/clear");
+    expect(showToast).toHaveBeenCalledWith("缓存已清除");
+    expect(setError).toHaveBeenCalledWith("");
+  });
+
+  it("reports cache clear failures", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, json: async () => ({}) })));
+    const setError = vi.fn();
+    const showToast = vi.fn();
+    const { result } = renderHook(() =>
+      useSettingsTransfer({
+        settings: { git: [], docs: [] },
+        setSettings: vi.fn(),
+        useAi: true,
+        setUseAi: vi.fn(),
+        range: { start: "2026-11-01", end: "2026-11-30" },
+        setRange: vi.fn(),
+        exportFormat: "xlsx",
+        setExportFormat: vi.fn(),
+        loading: false,
+        setError,
+        setSettingsMenuOpen: vi.fn(),
+        confirm: async () => true,
+        showToast,
+        t,
+      }),
+    );
+    await act(async () => result.current.clearCache());
+    expect(showToast).not.toHaveBeenCalled();
+    expect(String(setError.mock.calls[0][0])).toContain("清除缓存失败");
+  });
+
+  it("resets everything to defaults only after confirmation", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        ok: true,
+        settings: {
+          git: [],
+          docs: [],
+          aiEnabled: true,
+          mineOnly: true,
+          format: "xlsx",
+          scheduleEnabled: false,
+        },
+      }),
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+    const setSettings = vi.fn();
+    const setRange = vi.fn();
+    const setExportFormat = vi.fn();
+    const showToast = vi.fn();
+    const confirm = vi.fn(async () => false);
+    const { result } = renderHook(() =>
+      useSettingsTransfer({
+        settings: { git: [{ location: "D:/repo", branch: "main", label: "repo" }], docs: [] },
+        setSettings,
+        useAi: true,
+        setUseAi: vi.fn(),
+        range: { start: "2026-11-01", end: "2026-11-30" },
+        setRange,
+        exportFormat: "xlsx",
+        setExportFormat,
+        loading: false,
+        setError: vi.fn(),
+        setSettingsMenuOpen: vi.fn(),
+        confirm,
+        showToast,
+        t,
+      }),
+    );
+    await act(async () => result.current.resetAllSettings());
+    expect(confirm).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "还原所有默认配置？", danger: true }),
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(setSettings).not.toHaveBeenCalled();
+
+    confirm.mockImplementation(async () => true);
+    await act(async () => result.current.resetAllSettings());
+    expect(confirm).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[0][0])).toContain("/settings/reset");
+    expect(setSettings).toHaveBeenCalled();
+    expect(setRange).toHaveBeenCalled();
+    expect(setExportFormat).toHaveBeenCalledWith("xlsx");
+    expect(showToast).toHaveBeenCalledWith("已还原默认配置");
+  });
+
+  it("reports reset failures", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, json: async () => ({}) })));
+    const setError = vi.fn();
+    const showToast = vi.fn();
+    const { result } = renderHook(() =>
+      useSettingsTransfer({
+        settings: { git: [], docs: [] },
+        setSettings: vi.fn(),
+        useAi: true,
+        setUseAi: vi.fn(),
+        range: { start: "2026-11-01", end: "2026-11-30" },
+        setRange: vi.fn(),
+        exportFormat: "xlsx",
+        setExportFormat: vi.fn(),
+        loading: false,
+        setError,
+        setSettingsMenuOpen: vi.fn(),
+        confirm: async () => true,
+        showToast,
+        t,
+      }),
+    );
+    await act(async () => result.current.resetAllSettings());
+    expect(showToast).not.toHaveBeenCalled();
+    expect(String(setError.mock.calls[0][0])).toContain("还原默认配置失败");
+  });
+
   it("runs a generation job", async () => {
     const setPreview = vi.fn();
     const setPreviewJobId = vi.fn();

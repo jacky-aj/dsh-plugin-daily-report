@@ -55,6 +55,7 @@ lib/
   ai.js                  AI 提示词、模型调用、缓存
   report.js              XLSX 工作簿
   formats.js             Markdown / CSV / HTML
+  schedule.js            定时汇总的补跑与下次运行时间
   i18n.js                服务端文案
   locales/               服务端中英文词典
 src/client/
@@ -96,6 +97,7 @@ test/integration/        Vitest 集成测试
 3. 行为变化更新 `CHANGELOG.md`。
 4. 架构取舍变化新增 `docs/decisions/NNNN-*.md`。
 5. 不主动提交或发布。
+
 
 
 

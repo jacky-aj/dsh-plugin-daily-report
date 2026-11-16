@@ -1,6 +1,6 @@
 import React from "react";
 import { useApp } from "../context.jsx";
-import { ChevronIcon, DownloadIcon, GenerateIcon, Icon, SaveIcon, UploadIcon } from "../icons.jsx";
+import { ChevronIcon, DownloadIcon, GenerateIcon, Icon, ResetIcon, SaveIcon, TrashIcon, UploadIcon } from "../icons.jsx";
 import { API, FORMAT_OPTIONS, formatLabel, formatShortLabel, triggerDownload } from "../helpers.js";
 import { AiCard } from "./AiCard.jsx";
 import { DataSourceCard } from "./DataSourceCard.jsx";
@@ -20,6 +20,8 @@ export function DailyReportPage() {
     saveSettingsNow,
     exportSettings,
     importSettingsFile,
+    clearCache,
+    resetAllSettings,
     formatMenuOpen,
     setFormatMenuOpen,
     settingsMenuOpen,
@@ -168,6 +170,25 @@ export function DailyReportPage() {
                     >
                       <UploadIcon size={14} />
                       <span>{t("settings.import", "导入设置")}</span>
+                    </button>
+                    <div className="dsdr-menu-sep" role="separator" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="dsdr-menu-item dsdr-menu-item-start"
+                      onClick={clearCache}
+                    >
+                      <TrashIcon size={14} />
+                      <span>{t("settings.clearCache", "清除缓存")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="dsdr-menu-item dsdr-menu-item-start dsdr-menu-item-danger"
+                      onClick={resetAllSettings}
+                    >
+                      <ResetIcon size={14} />
+                      <span>{t("settings.reset", "还原默认配置")}</span>
                     </button>
                   </div>
                 ) : null}

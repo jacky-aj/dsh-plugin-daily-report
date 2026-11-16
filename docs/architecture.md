@@ -67,7 +67,7 @@ esbuild bundle
 | `useSettings` | 加载设置、AI 信息、日期范围、导出格式 |
 | `useMenus` | 格式菜单、设置菜单、外部点击关闭 |
 | `useConfirm` | 重要操作二次确认 |
-| `useSettingsTransfer` | 设置保存、导入、导出 |
+| `useSettingsTransfer` | 设置保存、导入、导出、清除缓存、还原默认配置 |
 | `useDataSources` | Git / 文档数据源编辑、扫描、测试 |
 | `useGeneration` | 生成任务、轮询、取消 |
 | `usePreview` | 预览编辑、导出、单日重新分析 |
@@ -159,4 +159,5 @@ index.js
 ```
 
 详见 `docs/testing.md`。
+
 

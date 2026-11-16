@@ -23,6 +23,7 @@ import {
 import { aiInfo, analyzeReport, availableAiModels, regenerateDay } from "./lib/ai.js";
 import { buildCsvReport, buildHtmlReport, buildMarkdownReport } from "./lib/formats.js";
 import { buildReportWorkbook, reportFileName, summarizeReport, buildReportPreview, applyReportEdits } from "./lib/report.js";
+import { isoWeekKey, missedOccurrences, nextOccurrence, scheduledRange } from "./lib/schedule.js";
 
 export const inject = ["webServer"];
 
@@ -39,6 +40,8 @@ const ROUTE_JOB_CANCEL = "/daily-report/job/cancel";
 const ROUTE_SCAN = "/daily-report/scan";
 const ROUTE_TEST = "/daily-report/test-sources";
 const ROUTE_SCHEDULE_STATUS = "/daily-report/schedule/status";
+const ROUTE_CACHE_CLEAR = "/daily-report/cache/clear";
+const ROUTE_SETTINGS_RESET = "/daily-report/settings/reset";
 const ROUTE_SCHEDULE_FILE = "/daily-report/schedule/file";
 const ROUTE_SCHEDULE_RUN = "/daily-report/schedule/run";
 const MAX_BODY = 2 * 1024 * 1024;
@@ -106,6 +109,10 @@ function settingsPath() {
 
 function aiCachePath() {
   return join(homeDirectory(), "daily-report", "ai-cache.json");
+}
+
+function repoCacheRoot() {
+  return join(homeDirectory(), "daily-report", "repos");
 }
 
 function isLoopback(req) {
@@ -303,25 +310,6 @@ async function writeScheduleState(state) {
   await fs.writeFile(file, JSON.stringify(state, null, 2), "utf8");
 }
 
-function isoWeekKey(date) {
-  const value = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const day = value.getUTCDay() || 7;
-  value.setUTCDate(value.getUTCDate() + 4 - day);
-  const yearStart = new Date(Date.UTC(value.getUTCFullYear(), 0, 1));
-  const week = Math.ceil(((value - yearStart) / 86400000 + 1) / 7);
-  return value.getUTCFullYear() + "-W" + String(week).padStart(2, "0");
-}
-
-function scheduledRange(frequency, now) {
-  if (frequency === "weekly") {
-    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-    const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
-    return { start: formatLocalDate(monday), end: formatLocalDate(sunday) };
-  }
-  const today = formatLocalDate(now);
-  return { start: today, end: today };
-}
-
 let scheduleRunning = false;
 
 async function runScheduledReport(ctx, settings, range, now) {
@@ -349,34 +337,48 @@ async function checkSchedule(ctx) {
   const { settings } = await readSettings();
   if (!settings.scheduleEnabled) return;
   const now = new Date();
-  const currentTime = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
-  if (currentTime < settings.scheduleTime) return;
-  const dateKey = formatLocalDate(now);
-  const weekKey = isoWeekKey(now);
   const state = await readScheduleState();
-  if (settings.scheduleFrequency === "weekly") {
-    if (now.getDay() !== 1 || state.lastWeekly === weekKey) return;
-  } else if (state.lastDaily === dateKey) {
-    return;
-  }
+
+  const { runs, skipped } = missedOccurrences({
+    frequency: settings.scheduleFrequency,
+    time: settings.scheduleTime,
+    lastRunDate: state.lastDaily,
+    now,
+  });
+  if (runs.length === 0) return;
+
   scheduleRunning = true;
-  const range = scheduledRange(settings.scheduleFrequency, now);
+  let completed = 0;
+  let failed = 0;
   try {
-    const result = await runScheduledReport(ctx, settings, range, now);
-    state.lastStatus = "ok";
-    state.lastFile = result.filename;
-    state.lastError = "";
-    state.lastRange = range;
-  } catch (error) {
-    state.lastStatus = "error";
-    state.lastFile = "";
-    state.lastError = (error && error.message) || "自动生成失败";
-    state.lastRange = range;
+    for (const run of runs) {
+      const range = run.range;
+      try {
+        const result = await runScheduledReport(ctx, settings, range, run.at);
+        state.lastStatus = "ok";
+        state.lastFile = result.filename;
+        state.lastError = "";
+        state.lastRange = range;
+        completed += 1;
+      } catch (error) {
+        state.lastStatus = "error";
+        state.lastFile = "";
+        state.lastError = (error && error.message) || "定时汇总失败";
+        state.lastRange = range;
+        failed += 1;
+      } finally {
+        state.lastAt = formatLocalDateTime(run.at);
+        state.lastDaily = run.date;
+        if (settings.scheduleFrequency === "weekly") state.lastWeekly = run.weekKey;
+        state.lastCatchUpAt = formatLocalDateTime(now);
+        await writeScheduleState(state).catch(() => {});
+      }
+    }
+    if (runs.length > 1 || skipped > 0) {
+      state.lastCatchUp = { at: formatLocalDateTime(now), runs: completed, failed, skipped };
+      await writeScheduleState(state).catch(() => {});
+    }
   } finally {
-    state.lastAt = formatLocalDateTime(now);
-    state.lastDaily = dateKey;
-    if (settings.scheduleFrequency === "weekly") state.lastWeekly = weekKey;
-    await writeScheduleState(state).catch(() => {});
     scheduleRunning = false;
   }
 }
@@ -407,11 +409,28 @@ async function scheduleStatus() {
     state.lastFile = latest.name;
     state.lastStatus = "ok";
   }
+  const next = settings.scheduleEnabled
+    ? nextOccurrence({
+        frequency: settings.scheduleFrequency,
+        time: settings.scheduleTime,
+        now: new Date(),
+      })
+    : null;
+  const pending = settings.scheduleEnabled
+    ? missedOccurrences({
+        frequency: settings.scheduleFrequency,
+        time: settings.scheduleTime,
+        lastRunDate: state.lastDaily,
+        now: new Date(),
+      }).runs.length
+    : 0;
   return {
     enabled: settings.scheduleEnabled,
     frequency: settings.scheduleFrequency,
     time: settings.scheduleTime,
     running: scheduleRunning,
+    nextRunAt: next ? formatLocalDateTime(next.at) : "",
+    pending,
     directory: join(homeDirectory(), "daily-report", "history"),
     state,
     history,
@@ -1102,6 +1121,53 @@ export function apply(ctx) {
 
   registerRoute(
     ctx,
+    ROUTE_CACHE_CLEAR,
+    async (req, res) => {
+      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
+      if (req.method !== "POST") {
+        res.setHeader("allow", "POST");
+        return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
+      }
+      const cleared = { aiCache: false, repoCache: false };
+      try {
+        await fs.rm(aiCachePath(), { force: true });
+        cleared.aiCache = true;
+      } catch {
+        // A missing or locked cache file is not fatal.
+      }
+      try {
+        await fs.rm(repoCacheRoot(), { recursive: true, force: true });
+        cleared.repoCache = true;
+      } catch {
+        // Same here: report what we could remove.
+      }
+      return sendJson(res, 200, { ok: true, cleared, cacheFile: aiCachePath(), repoCache: repoCacheRoot() });
+    },
+    "daily-report: cache clear route",
+  );
+
+  registerRoute(
+    ctx,
+    ROUTE_SETTINGS_RESET,
+    async (req, res) => {
+      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
+      if (req.method !== "POST") {
+        res.setHeader("allow", "POST");
+        return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
+      }
+      const settings = defaultSettings();
+      try {
+        await writeSettings(settings);
+      } catch (error) {
+        return sendError(res, 500, "reset-failed", (error && error.message) || "还原默认配置失败。");
+      }
+      return sendJson(res, 200, { ok: true, settings });
+    },
+    "daily-report: settings reset route",
+  );
+
+  registerRoute(
+    ctx,
     ROUTE_SCHEDULE_STATUS,
     async (req, res) => {
       if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
@@ -1177,6 +1243,11 @@ export function apply(ctx) {
         state.lastError = "";
         state.lastRange = range;
         state.lastAt = formatLocalDateTime(now);
+        // A manual run covers today, so catch-up will not repeat it.
+        state.lastDaily = formatLocalDate(now);
+        if (settings.scheduleFrequency === "weekly") {
+          state.lastWeekly = isoWeekKey(now);
+        }
         await writeScheduleState(state);
         return sendJson(res, 200, { ok: true, ...result, status: await scheduleStatus() });
       } catch (error) {
@@ -1185,6 +1256,7 @@ export function apply(ctx) {
         state.lastError = (error && error.message) || "自动生成失败";
         state.lastRange = range;
         state.lastAt = formatLocalDateTime(now);
+        state.lastDaily = formatLocalDate(now);
         await writeScheduleState(state).catch(() => {});
         return sendJson(res, 200, { ok: false, error: state.lastError, status: await scheduleStatus() });
       } finally {

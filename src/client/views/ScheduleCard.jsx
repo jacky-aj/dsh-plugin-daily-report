@@ -89,13 +89,13 @@ export function ScheduleCard() {
         </div>
       </div>
       <div className="dsdr-hint">
-        {t("schedule.hint", "自动生成使用当前保存的数据源、AI 设置和格式。")}
+        {t("schedule.hint", "定时汇总使用当前保存的数据源、AI 设置和格式。")}
       </div>
       <div className="dsdr-schedule-status">
         <div className="dsdr-schedule-status-head">
           <div className="dsdr-hint">
             {scheduleStatus && scheduleStatus.running
-              ? t("schedule.inProgress", "自动生成进行中…")
+              ? t("schedule.inProgress", "定时汇总进行中…")
               : scheduleStatus &&
                   scheduleStatus.state &&
                   scheduleStatus.state.lastAt
@@ -133,6 +133,29 @@ export function ScheduleCard() {
         scheduleStatus.state.lastStatus === "error" &&
         scheduleStatus.state.lastError ? (
           <div className="dsdr-error">{scheduleStatus.state.lastError}</div>
+        ) : null}
+        {scheduleStatus && scheduleStatus.pending > 0 ? (
+          <div className="dsdr-hint">
+            {t("schedule.pending", "有 {count} 次遗漏的定时汇总，启动后会补跑。").replace(
+              "{count}",
+              String(scheduleStatus.pending),
+            )}
+          </div>
+        ) : null}
+        {scheduleStatus &&
+        scheduleStatus.state &&
+        scheduleStatus.state.lastCatchUp &&
+        scheduleStatus.state.lastCatchUp.runs > 1 ? (
+          <div className="dsdr-hint">
+            {t("schedule.catchUp", "已于 {at} 补跑 {count} 次定时汇总。")
+              .replace("{at}", scheduleStatus.state.lastCatchUp.at)
+              .replace("{count}", String(scheduleStatus.state.lastCatchUp.runs))}
+          </div>
+        ) : null}
+        {scheduleStatus && scheduleStatus.enabled && scheduleStatus.nextRunAt ? (
+          <div className="dsdr-hint">
+            {t("schedule.next", "下次运行：") + scheduleStatus.nextRunAt}
+          </div>
         ) : null}
         {scheduleStatus &&
         scheduleStatus.state &&

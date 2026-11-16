@@ -12,7 +12,7 @@ import {
 } from "../../lib/collect.js";
 import { buildCsvReport, buildHtmlReport, buildMarkdownReport } from "../../lib/formats.js";
 import { message, normalizeLocale, t } from "../../lib/i18n.js";
-import { buildReportWorkbook } from "../../lib/report.js";
+import { buildReportWorkbook, fileStamp, reportFileName } from "../../lib/report.js";
 
 function sample(locale) {
   return {
@@ -206,6 +206,16 @@ describe("lib AI prompt", () => {
 });
 
 describe("lib report", () => {
+  it("puts a local timestamp in exported file names", () => {
+    const at = new Date(2026, 10, 16, 14, 27, 30);
+    expect(reportFileName("2026-11-01", "2026-11-30", "xlsx", at)).toBe(
+      "日报汇总_2026-11-01_2026-11-30_20261116-142730.xlsx",
+    );
+    expect(reportFileName("2026-11-01", "2026-11-30", "markdown", at)).toBe(
+      "日报汇总_2026-11-01_2026-11-30_20261116-142730.md",
+    );
+    expect(fileStamp(at)).toBe("20261116-142730");
+  });
   it("builds minimal and full workbooks", () => {
     const minimal = buildReportWorkbook({
       locale: "en",

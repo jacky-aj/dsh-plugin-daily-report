@@ -175,3 +175,8 @@
 .dsdr-toast-close:hover { background: rgba(255, 255, 255, .1); color: #ffffff; }
 @keyframes dsdr-toast-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
+
+.dsdr-menu-sep { height: 1px; margin: 4px 6px; background: var(--dsw-alias-border-l2); }
+.dsdr-menu-item-danger { color: #e5534b; }
+.dsdr-menu-item-danger:hover { background: rgba(229, 83, 75, .12); }
+

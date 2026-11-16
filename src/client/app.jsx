@@ -70,6 +70,8 @@ export function DailyReportView(props) {
     persistSettings,
     exportSettings,
     importSettingsFile,
+    clearCache,
+    resetAllSettings,
   } = useSettingsTransfer({
     settings,
     setSettings,
@@ -83,6 +85,7 @@ export function DailyReportView(props) {
     setError,
     setSettingsMenuOpen,
     confirm,
+    showToast,
     t,
   });
   const {
@@ -291,6 +294,8 @@ export function DailyReportView(props) {
     saveSettingsNow,
     exportSettings,
     importSettingsFile,
+    clearCache,
+    resetAllSettings,
     formatMenuOpen,
     setFormatMenuOpen,
     settingsMenuOpen,

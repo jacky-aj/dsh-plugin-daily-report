@@ -41,6 +41,16 @@ Vitest tests：63 passed
 - 重要操作二次确认
 - 确认框透明背景修复\n- 页面语言文件移出 `locale/`，修复 DSH 插件元数据语言文件名校验错误\n- 开关组件样式对齐 DSH 官方页面\n- 异步确认后复选框状态不生效修复
 
+## 工作区未发布
+
+- 定时汇总补跑（最多 7 天，`lib/schedule.js`）
+- 导出文件名附带时间戳
+- 定时状态新增 `nextRunAt` / `pending` / `lastCatchUp`
+- 本地调试结论：Host 侧改动必须重启 DSH，禁用/启用插件不会重新导入 ES 模块
+- 清除缓存（`POST /daily-report/cache/clear`）：删 AI 缓存与 repos 裸克隆
+- 还原默认配置（`POST /daily-report/settings/reset`）：写回默认设置
+- 两者都必须二次确认
+
 ## 已知问题
 
 - `index.js` 仍有一些 Host 错误分支未覆盖。
@@ -55,6 +65,8 @@ Vitest tests：63 passed
 1. 继续提升 Host 路由和 lib 失败分支覆盖率。
 2. 评估是否把 `test/integration/render.spec.mjs` 改为更稳定的状态注入方式。
 3. 考虑为确认框补键盘 Esc 与焦点管理。
+
+
 
 
 

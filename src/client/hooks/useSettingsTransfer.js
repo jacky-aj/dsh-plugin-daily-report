@@ -14,6 +14,7 @@ export function useSettingsTransfer({
   setError,
   setSettingsMenuOpen,
   confirm = async () => true,
+  showToast,
   t,
 }) {
   const [saveState, setSaveState] = React.useState("idle");
@@ -158,12 +159,89 @@ export function useSettingsTransfer({
     }
   }
 
+  async function clearCache() {
+    setSettingsMenuOpen(false);
+    const accepted = await confirm({
+      title: t("confirm.clearCache.title", "清除缓存？"),
+      message: t(
+        "confirm.clearCache.message",
+        "将删除 AI 摘要缓存和远程仓库缓存。下次生成会重新分析和重新克隆，耗时和 token 消耗都会增加。已生成的日报和历史文件不受影响。",
+      ),
+      confirmLabel: t("confirm.clearCache.confirm", "清除"),
+      cancelLabel: t("confirm.cancel", "取消"),
+      danger: true,
+    });
+    if (!accepted) return;
+    try {
+      const response = await fetch(API + "/cache/clear", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (!response.ok) throw new Error("clear-failed");
+      setError("");
+      if (typeof showToast === "function") {
+        showToast(t("toast.cacheCleared", "缓存已清除"));
+      }
+    } catch (err) {
+      setError(
+        t("settings.clearCacheFailed", "清除缓存失败：") +
+          (err && err.message ? err.message : "未知错误"),
+      );
+    }
+  }
+
+  async function resetAllSettings() {
+    setSettingsMenuOpen(false);
+    const accepted = await confirm({
+      title: t("confirm.resetSettings.title", "还原所有默认配置？"),
+      message: t(
+        "confirm.resetSettings.message",
+        "将清空所有 Git 仓库和本地文档，并把 AI、定时汇总、日期范围和导出格式恢复为默认值。已生成的日报和历史文件不受影响，此操作不可撤销。",
+      ),
+      confirmLabel: t("confirm.resetSettings.confirm", "还原"),
+      cancelLabel: t("confirm.cancel", "取消"),
+      danger: true,
+    });
+    if (!accepted) return;
+    try {
+      const response = await fetch(API + "/settings/reset", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (!response.ok) throw new Error("reset-failed");
+      const payload = await response.json();
+      const next = normalizeClientSettings(payload.settings || {});
+      setSettings(next);
+      setUseAi(payload.settings ? payload.settings.aiEnabled !== false : true);
+      setRange(currentMonthRange());
+      setExportFormat(
+        payload.settings && FORMAT_OPTIONS.includes(payload.settings.format)
+          ? payload.settings.format
+          : "xlsx",
+      );
+      firstSave.current = true;
+      setError("");
+      if (typeof showToast === "function") {
+        showToast(t("toast.settingsReset", "已还原默认配置"));
+      }
+    } catch (err) {
+      setError(
+        t("settings.resetFailed", "还原默认配置失败：") +
+          (err && err.message ? err.message : "未知错误"),
+      );
+    }
+  }
+
   return {
     saveState,
     saveSettingsNow,
     persistSettings,
     exportSettings,
     importSettingsFile,
+    clearCache,
+    resetAllSettings,
   };
 }
 
