@@ -160,4 +160,19 @@ index.js
 
 详见 `docs/testing.md`。
 
+## 9. 路由访问校验
 
+所有 `/daily-report/*` 路由都由 `registerRoute` 统一包装，在进入 handler 之前先问宿主的 `ctx.connection.requestRejection(req)`：
+
+```js
+const refused = ctx.connection.requestRejection(req); // 401 | 403 | undefined
+if (refused !== undefined) return sendRefusal(res, refused);
+```
+
+原因：这些路由是 `webServer` 的 `exact` 注册，不会经过 DSH 的 `/api` 前缀围栏；而 `isLoopback` 挡不住浏览器里的页面（请求对端就是 127.0.0.1）。
+
+- 宿主决定是否放行（Host/Origin 围栏 + 浏览器登录），插件不自己再写一套规则
+- 宿主缺少该服务时退回 `isLoopback`，行为与旧版一致
+- 宿主校验抛异常按 403 处理
+
+详见 `docs/decisions/0004-request-gate.md`。

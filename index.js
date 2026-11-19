@@ -25,7 +25,7 @@ import { buildCsvReport, buildHtmlReport, buildMarkdownReport } from "./lib/form
 import { buildReportWorkbook, reportFileName, summarizeReport, buildReportPreview, applyReportEdits } from "./lib/report.js";
 import { isoWeekKey, missedOccurrences, nextOccurrence, scheduledRange } from "./lib/schedule.js";
 
-export const inject = ["webServer"];
+export const inject = ["webServer", "connection"];
 
 const ROUTE_STATE = "/daily-report/state";
 const ROUTE_LOCALES = "/daily-report/locales";
@@ -118,6 +118,73 @@ function repoCacheRoot() {
 function isLoopback(req) {
   const address = req.socket && req.socket.remoteAddress ? req.socket.remoteAddress : "";
   return address === "127.0.0.1" || address === "::1" || address === "::ffff:127.0.0.1";
+}
+
+/**
+ * The host's own request gate, read per request so a service that becomes
+ * available later is honoured.
+ *
+ * Every route below is an `exact` registration on the bare webServer, which
+ * means DSH's `/api` fence never sees them. Without this the only check was
+ * `isLoopback`, and that does not stop a page: a script running in the user's
+ * browser reaches a loopback listener from 127.0.0.1. `connection.requestRejection`
+ * is the fence DSH applies to its own API — the Host/Origin check plus the
+ * browser login — so asking it is the fix, not a second login.
+ *
+ * It takes `{ headers }`, which an `IncomingMessage` already satisfies.
+ *
+ * @returns a function returning 401, 403, or undefined when admitted; `null`
+ *   when the host publishes no gate (DSH older than the service).
+ */
+function requestGate(ctx) {
+  let connection;
+  try {
+    connection = ctx.connection;
+  } catch {
+    connection = undefined;
+  }
+  if (!connection && typeof ctx.get === "function") {
+    try {
+      connection = ctx.get("connection");
+    } catch {
+      connection = undefined;
+    }
+  }
+  const gate = connection && typeof connection.requestRejection === "function" ? connection.requestRejection : null;
+  if (!gate) return null;
+  return (request) => {
+    try {
+      return gate.call(connection, request);
+    } catch {
+      // A gate that throws admitted nothing; failing open would turn a host
+      // bug into exactly the exposure this exists to close.
+      return 403;
+    }
+  };
+}
+
+/**
+ * @returns undefined when the request may proceed, or the status to answer with.
+ */
+function refusedStatus(ctx, req) {
+  const gate = requestGate(ctx);
+  if (!gate) {
+    // Hosts without the connection service keep the previous loopback rule.
+    return isLoopback(req) ? undefined : 403;
+  }
+  return gate(req);
+}
+
+function sendRefusal(res, status) {
+  const unauthorized = status === 401;
+  return sendError(
+    res,
+    unauthorized ? 401 : 403,
+    unauthorized ? "login-required" : "untrusted-origin",
+    unauthorized
+      ? "需要先登录 DSH：请重新打开启动时打印的网址。"
+      : "这个请求来自不受信任的来源，已拒绝。",
+  );
 }
 
 function sendJson(res, status, body) {
@@ -555,7 +622,14 @@ async function generateFromRequest(ctx, body, signal, onProgress) {
 }
 
 function registerRoute(ctx, path, handler, label) {
-  const dispose = ctx.webServer.register({ kind: "exact", path, handler });
+  // The gate runs before the handler on every route, so a new route cannot
+  // forget it and no handler has to re-check.
+  const guardedHandler = async (req, res) => {
+    const refused = refusedStatus(ctx, req);
+    if (refused !== undefined) return sendRefusal(res, refused);
+    return handler(req, res);
+  };
+  const dispose = ctx.webServer.register({ kind: "exact", path, handler: guardedHandler });
   ctx.effect(() => dispose, label);
 }
 
@@ -761,7 +835,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_LOCALES,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "GET") {
         res.setHeader("allow", "GET");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -784,7 +857,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_STATE,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method === "GET") {
         const saved = await readSettings();
         const ai = aiInfo(ctx);
@@ -833,7 +905,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_SCAN,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "POST") {
         res.setHeader("allow", "POST");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -863,7 +934,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_GENERATE,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "POST") {
         res.setHeader("allow", "POST");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -896,7 +966,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_START,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "POST") {
         res.setHeader("allow", "POST");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -919,7 +988,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_JOB,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "GET") {
         res.setHeader("allow", "GET");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -945,7 +1013,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_JOB_FILE,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "GET") {
         res.setHeader("allow", "GET");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -966,7 +1033,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_JOB_PREVIEW,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "GET") {
         res.setHeader("allow", "GET");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -985,7 +1051,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_JOB_EXPORT,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "POST") {
         res.setHeader("allow", "POST");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -1016,7 +1081,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_JOB_REGENERATE,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "POST") {
         res.setHeader("allow", "POST");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -1052,7 +1116,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_TEST,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "POST") {
         res.setHeader("allow", "POST");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -1094,7 +1157,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_JOB_CANCEL,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "POST") {
         res.setHeader("allow", "POST");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -1123,7 +1185,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_CACHE_CLEAR,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "POST") {
         res.setHeader("allow", "POST");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -1150,7 +1211,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_SETTINGS_RESET,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "POST") {
         res.setHeader("allow", "POST");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -1170,7 +1230,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_SCHEDULE_STATUS,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "GET") {
         res.setHeader("allow", "GET");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -1184,7 +1243,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_SCHEDULE_FILE,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "GET") {
         res.setHeader("allow", "GET");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -1222,7 +1280,6 @@ export function apply(ctx) {
     ctx,
     ROUTE_SCHEDULE_RUN,
     async (req, res) => {
-      if (!isLoopback(req)) return sendError(res, 403, "forbidden", "只允许本机访问。");
       if (req.method !== "POST") {
         res.setHeader("allow", "POST");
         return sendError(res, 405, "method-not-allowed", "请求方法不支持。");
@@ -1269,6 +1326,7 @@ export function apply(ctx) {
   registerTool(ctx);
   startScheduler(ctx);
 }
+
 
 
 

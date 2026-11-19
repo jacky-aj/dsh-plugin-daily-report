@@ -1,0 +1,44 @@
+# Market submission entry (for awesome-dsh-plugin)
+
+Copy this file to the target repository as:
+
+```text
+data/plugins/jacky-aj__dsh-plugin-daily-report.yml
+```
+
+Do **not** edit the generated READMEs there. The list is generated from these entries.
+
+## Entry
+
+```yaml
+url: https://github.com/jacky-aj/dsh-plugin-daily-report
+name: jacky-aj/dsh-plugin-daily-report
+category: git
+description:
+  en: Aggregates commits from multiple Git repositories and branches plus local notes into a daily report, optionally summarized by AI, and exports it as XLSX, Markdown, CSV or HTML.
+  zh: 按天汇总多个 Git 仓库与分支的提交和本地文档，可由 AI 生成摘要，并导出 XLSX、Markdown、CSV 或 HTML 日报。
+```
+
+## Why these values
+
+- `url` / `name`: must match the GitHub repository exactly; CI fetches `package.json`
+  from it. The public repository is `jacky-aj/dsh-plugin-daily-report` while the npm
+  package metadata still points at Gitee — see `docs/runbooks/market-submit.md`.
+- `category: git`: the plugin's input is Git history (multiple repos, branches, author
+  filtering, merge exclusion). `docs` is a reasonable fallback if a maintainer prefers
+  it; a near-miss category is re-filed by a maintainer rather than rejected.
+- `description.en`: only `description.en` is required. Claims are checked against the
+  code, so each phrase above must stay true:
+  - "commits from multiple Git repositories and branches" — `lib/collect.js`
+  - "plus local notes" — `lib/collect.js` document scanning
+  - "optionally summarized by AI" — `useAi` / `aiEnabled` toggle, off is allowed
+  - "exports it as XLSX, Markdown, CSV or HTML" — `lib/report.js`, `lib/formats.js`
+- No `icon:` field: the entry icon must be a GitHub-hosted **raster** image and the repo
+  ships `icon.svg`. Omit it and the list falls back to the owner avatar. Add a PNG at
+  `assets/icon-180.png` later if a custom tile is wanted.
+
+## Not included on purpose
+
+- `tarball:` — the plugin is published to npm, which is the preferred install path.
+- `screenshots:` — optional; requires `screenshots.json` plus real screenshots in the
+  GitHub repo.

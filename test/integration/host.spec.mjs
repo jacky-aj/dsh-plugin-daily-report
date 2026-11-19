@@ -33,6 +33,8 @@ writeFileSync(join(notes, "2026-11-02-记录.md"), "# 联调记录\n\n完成插�
 const routes = new Map();
 const tools = [];
 const cleanups = [];
+// undefined = host publishes no connection service (older DSH).
+let connectionGate;
 const ctx = {
   webServer: {
     register(route) {
@@ -45,6 +47,9 @@ const ctx = {
     if (typeof dispose === "function") cleanups.push(dispose);
   },
   get(name) {
+    if (name === "connection") {
+      return connectionGate === undefined ? undefined : { requestRejection: connectionGate };
+    }
     if (name === "tools") {
       return {
         register(definition) {
@@ -77,14 +82,15 @@ assert.ok(routes.has("/daily-report/generate"));
 assert.equal(tools.length, 1);
 assert.equal(tools[0].name, "daily_report");
 
-function request(url, method, body) {
+function request(url, method, body, remoteAddress) {
   const handler = routes.get(url.split("?")[0]);
   assert.ok(handler, "route missing: " + url);
   return new Promise((resolve, reject) => {
     const req = new Readable({ read() {} });
     req.method = method;
     req.url = url;
-    req.socket = { remoteAddress: "127.0.0.1" };
+    req.socket = { remoteAddress: remoteAddress || "127.0.0.1" };
+    req.headers = { host: "127.0.0.1:1234" };
     const headers = {};
     const res = {
       statusCode: 200,
@@ -385,6 +391,44 @@ for (let attempt = 0; attempt < 40; attempt += 1) {
   await new Promise((resolve) => setTimeout(resolve, 50));
 }
 assert.equal(JSON.parse(badJob.body.toString("utf8")).status, "failed");
+
+// The host request gate runs before every route handler.
+// A page in the user's browser reaches a loopback listener from 127.0.0.1, so
+// the loopback rule alone cannot refuse it; the gate is what does.
+connectionGate = () => 403;
+const gatedGet = await request("/daily-report/state?sessionId=", "GET");
+assert.equal(gatedGet.status, 403);
+assert.equal(JSON.parse(gatedGet.body.toString("utf8")).error.code, "untrusted-origin");
+// A mutating route must be refused BEFORE it touches state.
+const gatedPut = await request("/daily-report/settings/reset", "POST", {});
+assert.equal(gatedPut.status, 403);
+const stateAfterRefusal = await request("/daily-report/state?sessionId=", "GET");
+assert.equal(stateAfterRefusal.status, 403);
+
+connectionGate = () => 401;
+const loginRequired = await request("/daily-report/locales", "GET");
+assert.equal(loginRequired.status, 401);
+assert.equal(JSON.parse(loginRequired.body.toString("utf8")).error.code, "login-required");
+
+// A gate that throws has admitted nothing.
+connectionGate = () => {
+  throw new Error("gate bug");
+};
+const throwingGate = await request("/daily-report/locales", "GET");
+assert.equal(throwingGate.status, 403);
+
+// An admitting gate replaces the loopback rule: a request from another address
+// is served when the host says it may be.
+connectionGate = () => undefined;
+const remoteAdmitted = await request("/daily-report/locales", "GET", undefined, "192.168.1.9");
+assert.equal(remoteAdmitted.status, 200);
+
+// Without the connection service the previous loopback rule still applies.
+connectionGate = undefined;
+const remoteRefused = await request("/daily-report/locales", "GET", undefined, "192.168.1.9");
+assert.equal(remoteRefused.status, 403);
+const loopbackAllowed = await request("/daily-report/locales", "GET");
+assert.equal(loopbackAllowed.status, 200);
 
 const toolResult = await tools[0].execute(
   { start: "2026-11-01", end: "2026-11-30", git: [{ location: repo, branch: "main" }], docs: [notes] },

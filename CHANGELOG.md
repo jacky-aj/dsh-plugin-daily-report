@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.1.3 - 2026-11-19
+
+### Security
+
+- 所有 `/daily-report/*` 路由改为经过 DSH 的访问校验（`ctx.connection.requestRejection`）：此前只有 loopback 判断，浏览器里打开的任意网页都能请求这些路由，读取设置、导出日报或修改配置。宿主缺少该服务时仍退回旧的 loopback 规则。
 
 ### Added
 
@@ -13,6 +17,7 @@
 ### Changed
 
 - 手动「立即运行一次」会标记当天已汇总，避免随后被补跑重复触发
+- `inject` 增加 `connection`，路由准入交给宿主判断
 
 ## 1.1.2 - 2026-11-14
 
@@ -76,5 +81,6 @@
 ### Fixed
 
 - 使用浏览器可访问的 Gitee 仓库地址
+
 
 

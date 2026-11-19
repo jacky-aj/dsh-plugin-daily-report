@@ -6,7 +6,7 @@
 
 `dsh-plugin-daily-report`：DSH 日报插件。汇总多个 Git 仓库、分支和本地文档，生成按天日报，支持 AI 分析、预览编辑和 XLSX / Markdown / CSV / HTML 导出。
 
-当前版本：`1.1.2`。
+当前版本：`1.1.3`。
 仓库：`https://gitee.com/yuanjiegit/dsh-plugin-daily-report`
 
 ## 每次会话开始
@@ -73,6 +73,8 @@ test/integration/        Vitest 集成测试
 
 ## 关键约定
 
+- 所有 HTTP 路由经 `registerRoute` 包装，先过 `ctx.connection.requestRejection(req)`；不要删掉这层校验，也不要在 handler 里另写准入规则（见 `docs/decisions/0004-request-gate.md`）。
+
 - Client 使用 ESM + JSX；React 由 DSH 提供，不能重复打包。
 - 构建输出必须保持 `window.__ModuleLoader__.load({ id, factory(require) })`。
 - 页面开关类事件如果 `await confirm(...)`，必须在 `await` 前保存 `event.target.checked`。
@@ -97,6 +99,8 @@ test/integration/        Vitest 集成测试
 3. 行为变化更新 `CHANGELOG.md`。
 4. 架构取舍变化新增 `docs/decisions/NNNN-*.md`。
 5. 不主动提交或发布。
+
+
 
 
 
