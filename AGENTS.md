@@ -6,7 +6,7 @@
 
 `dsh-plugin-daily-report`：DSH 日报插件。汇总多个 Git 仓库、分支和本地文档，生成按天日报，支持 AI 分析、预览编辑和 XLSX / Markdown / CSV / HTML 导出。
 
-当前版本：`1.1.3`。
+当前版本：`1.1.4`。
 仓库：`https://gitee.com/yuanjiegit/dsh-plugin-daily-report`
 
 ## 每次会话开始
@@ -99,6 +99,7 @@ test/integration/        Vitest 集成测试
 3. 行为变化更新 `CHANGELOG.md`。
 4. 架构取舍变化新增 `docs/decisions/NNNN-*.md`。
 5. 不主动提交或发布。
+
 
 
 
