@@ -29,6 +29,7 @@
 - [docs/troubleshooting.md](docs/troubleshooting.md)：安装报错、语言文件、确认框样式等常见问题
 - [docs/runbooks/local-debug.md](docs/runbooks/local-debug.md)：本地调试与同步到已安装包
 - [docs/runbooks/market-submit.md](docs/runbooks/market-submit.md)：提交到 DSH 插件市场
+- [docs/runbooks/mirror-to-github.md](docs/runbooks/mirror-to-github.md)：GitHub 镜像（git push 不可用时走 API）
 - [docs/decisions/](docs/decisions/)：架构决策记录
 - [CHANGELOG.md](CHANGELOG.md)：版本变更
 
@@ -238,6 +239,7 @@ branches   60%
 - AI 分析会读取每个仓库前 60 条提交的代码 diff 片段（每条最多约 1200 字符），并使用当前默认模型；会产生额外的生成时间和 token 消耗。模型调用失败时仍会生成普通日报，并在提示中说明失败原因。
 - AI 缓存只复用未变化的日期；提交、diff、文档摘要或模型变化后会重新分析对应日期。
 - 所有处理在本机完成，不上传仓库或文档内容；启用 AI 分析时，会把上述有界摘要发送给当前配置的模型服务。
+
 
 
 

@@ -106,8 +106,19 @@ node scripts/sync-to-profile.mjs "<目录>"
 
 不要用 junction。可以复制整个仓库到独立目录，或临时改 `client.js` 后立即同步回来，避免长期偏离。
 
+## 同步到 GitHub
+
+`git push` 到 github.com 在本机会被重置，GitHub 镜像改用 API：
+
+```powershell
+npm run mirror:github
+```
+
+详见 `docs/runbooks/mirror-to-github.md`。GitHub 上的提交号与本地不同属正常，内容一致。
+
 ## 发版仍然照常
 
 同步只是本地验证手段，不会改变 profile 的依赖声明。正式发布走 `docs/runbooks/publish.md`，发布后在插件管理器里重新安装即可回到 npm 版本。
+
 
 

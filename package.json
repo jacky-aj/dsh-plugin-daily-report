@@ -78,6 +78,7 @@
     "test:coverage": "vitest run --coverage",
     "test:vitest": "vitest run",
     "coverage:vitest": "vitest run --coverage",
-    "sync:plugin": "node scripts/sync-to-profile.mjs"
+    "sync:plugin": "node scripts/sync-to-profile.mjs",
+    "mirror:github": "node scripts/mirror-to-github.mjs jacky-aj/dsh-plugin-daily-report HEAD"
   }
 }

@@ -8,3 +8,6 @@ package-lock.json
 
 # Test output
 coverage/
+
+pnpm-lock.yaml
+pnpm-workspace.yaml
