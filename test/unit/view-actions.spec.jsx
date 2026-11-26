@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppContext } from "../../src/client/context.jsx";
 import { AiCard } from "../../src/client/views/AiCard.jsx";
 import { DataSourceCard } from "../../src/client/views/DataSourceCard.jsx";
+import { DailyReportPage } from "../../src/client/views/DailyReportPage.jsx";
 import { PreviewCard } from "../../src/client/views/PreviewCard.jsx";
 import { RangeCard } from "../../src/client/views/RangeCard.jsx";
 import { ScheduleCard } from "../../src/client/views/ScheduleCard.jsx";
@@ -231,6 +232,217 @@ describe("view interactions", () => {
     expect(removeDoc).toHaveBeenCalled();
   });
 
+  it("wires every data source control", () => {
+    const calls = {
+      addGit: vi.fn(),
+      addDoc: vi.fn(),
+      removeGit: vi.fn(),
+      removeDoc: vi.fn(),
+      updateGit: vi.fn(),
+      updateDoc: vi.fn(),
+      toggleScan: vi.fn(),
+      testSources: vi.fn(),
+      scanAndAdd: vi.fn(),
+      pickScanDirectory: vi.fn(),
+      switchGroup: vi.fn(),
+      chooseGroup: vi.fn(),
+    };
+    render(
+      withApp(
+        {
+          settings: {
+            git: [{ _key: "g1", location: "D:/a", branch: "main", label: "A" }],
+            docs: [{ _key: "d1", location: "D:/n", label: "N" }],
+          },
+          setSettings: vi.fn(),
+          ...calls,
+          showScan: true,
+          scanDir: "D:/repos",
+          setScanDir: vi.fn(),
+          scanning: false,
+          scanError: "",
+          scanMessage: "扫描完成",
+          testingSources: false,
+          testError: "",
+          testResults: [{ label: "repo", status: "ok", message: "ok" }],
+          dataSourceTab: "git",
+          setDataSourceTab: vi.fn(),
+          groups: [
+            { id: "a", name: "A", git: [], docs: [] },
+            { id: "b", name: "B", git: [], docs: [] },
+          ],
+          activeGroup: { id: "a", name: "A" },
+          confirm: async () => true,
+          t,
+        },
+        <DataSourceCard />,
+      ),
+    );
+    fireEvent.change(screen.getByDisplayValue("D:/a"), { target: { value: "D:/a2" } });
+    expect(calls.updateGit).toHaveBeenCalled();
+    fireEvent.change(screen.getByDisplayValue("main"), { target: { value: "dev" } });
+    fireEvent.click(screen.getAllByTitle("移除")[0]);
+    expect(calls.removeGit).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "+ 添加仓库" }));
+    expect(calls.addGit).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /扫描目录/ }));
+    expect(calls.toggleScan).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /扫描并添加/ }));
+    expect(calls.scanAndAdd).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /选择目录|要扫描的目录/ }));
+    fireEvent.click(screen.getByRole("button", { name: /测试数据源/ }));
+    expect(calls.testSources).toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText("当前分组"), { target: { value: "b" } });
+    expect(calls.chooseGroup).toHaveBeenCalledWith("b");
+  });
+
+  it("wires the preview controls", () => {
+    const addManualItem = vi.fn();
+    const togglePreviewDay = vi.fn();
+    const updatePreviewDay = vi.fn();
+    const removeManualItem = vi.fn();
+    const day = {
+      date: "2026-11-01",
+      weekday: "Sunday",
+      commitCount: 1,
+      docCount: 0,
+      summary: "raw",
+      aiSummary: "AI",
+      manualItems: ["meeting"],
+    };
+    render(
+      withApp(
+        {
+          preview: { range: { start: "2026-11-01", end: "2026-11-30" }, ai: { ok: true, overall: "overall" }, days: [day] },
+          previewDays: [day],
+          allPreviewExpanded: false,
+          exportFormat: "xlsx",
+          exporting: false,
+          regenerating: "",
+          expandedPreviewDays: { "2026-11-01": true },
+          manualDate: "2026-11-01",
+          manualText: "new item",
+          setAllPreviewExpanded: vi.fn(),
+          exportPreview: vi.fn(),
+          setPreview: vi.fn(),
+          setManualDate: vi.fn(),
+          setManualText: vi.fn(),
+          addManualItem,
+          togglePreviewDay,
+          regeneratePreviewDay: vi.fn(),
+          updatePreviewDay,
+          removeManualItem,
+          formatShortLabel: () => "XLSX",
+          t,
+        },
+        <PreviewCard />,
+      ),
+    );
+    fireEvent.change(screen.getByDisplayValue("AI"), { target: { value: "edited" } });
+    expect(updatePreviewDay).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /添加手动工作项/ }));
+    expect(addManualItem).toHaveBeenCalled();
+    fireEvent.click(screen.getByLabelText("移除"));
+    expect(removeManualItem).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /2026-11-01/ }));
+    expect(togglePreviewDay).toHaveBeenCalled();
+  });
+
+  it("wires the page level controls", () => {
+    const noop = vi.fn();
+    const ref = { current: null };
+    render(
+      withApp(
+        {
+          loading: false,
+          loadError: "",
+          error: "",
+          result: null,
+          showToast: vi.fn(),
+          saveText: "",
+          saveState: "idle",
+          saveSettingsNow: noop,
+          exportSettings: noop,
+          importSettingsFile: noop,
+          formatMenuOpen: true,
+          setFormatMenuOpen: noop,
+          settingsMenuOpen: true,
+          setSettingsMenuOpen: noop,
+          formatMenuRef: ref,
+          settingsMenuRef: ref,
+          settingsFileRef: ref,
+          settings: { git: [], docs: [], scheduleEnabled: false },
+          setSettings: noop,
+          range: { start: "2026-11-01", end: "2026-11-30" },
+          setRange: noop,
+          rangeDays: 30,
+          exportFormat: "xlsx",
+          setExportFormat: noop,
+          useAi: true,
+          setUseAi: noop,
+          aiInfo: { available: true, provider: "test", model: "mock", models: [] },
+          preview: null,
+          setPreview: noop,
+          previewDays: [],
+          allPreviewExpanded: false,
+          exporting: false,
+          regenerating: "",
+          expandedPreviewDays: {},
+          manualDate: "",
+          manualText: "",
+          setAllPreviewExpanded: noop,
+          exportPreview: noop,
+          setManualDate: noop,
+          setManualText: noop,
+          addManualItem: noop,
+          togglePreviewDay: noop,
+          regeneratePreviewDay: noop,
+          updatePreviewDay: noop,
+          removeManualItem: noop,
+          formatShortLabel: () => "XLSX",
+          scheduleStatus: null,
+          scheduleLoading: false,
+          scheduleError: "",
+          loadScheduleStatus: noop,
+          runScheduleNow: noop,
+          showScan: false,
+          scanDir: "",
+          setScanDir: noop,
+          scanAndAdd: noop,
+          scanning: false,
+          scanError: "",
+          scanMessage: "",
+          pickScanDirectory: noop,
+          toggleScan: noop,
+          testSources: noop,
+          testingSources: false,
+          testError: "",
+          testResults: [],
+          dataSourceTab: "git",
+          setDataSourceTab: noop,
+          updateGit: noop,
+          removeGit: noop,
+          addGit: noop,
+          updateDoc: noop,
+          removeDoc: noop,
+          addDoc: noop,
+          localeIsEnglish: false,
+          generating: false,
+          progress: null,
+          generate: noop,
+          cancelGeneration: noop,
+          t,
+        },
+        <DailyReportPage />,
+      ),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /保存设置/ }));
+    expect(noop).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("menuitem", { name: /导出设置/ }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /导入设置/ }));
+    fireEvent.click(screen.getByRole("button", { name: /生成日报/ }));
+  });
+
   it("expands a preview day and triggers single-day regeneration", () => {
     const regeneratePreviewDay = vi.fn();
     const exportPreview = vi.fn();
@@ -339,4 +551,8 @@ describe("view interactions", () => {
     expect(setRange).toHaveBeenCalledTimes(2);
   });
 });
+
+
+
+
 

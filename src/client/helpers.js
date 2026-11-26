@@ -96,32 +96,16 @@ export function daysBetween(start, end) {
 }
 export function normalizeClientSettings(raw) {
   const source = raw && typeof raw === "object" ? raw : {};
-  const git = Array.isArray(source.git)
-    ? source.git.map((item) => ({
-        _key: uid(),
-        location: typeof item.location === "string" ? item.location : "",
-        branch: typeof item.branch === "string" ? item.branch : "",
-        label: typeof item.label === "string" ? item.label : "",
-      }))
-    : [];
-  const docs = Array.isArray(source.docs)
-    ? source.docs.map((item) => {
-        const value =
-          typeof item === "string"
-            ? {
-                location: item,
-                label: "",
-              }
-            : item || {};
-        return {
-          _key: uid(),
-          location:
-            typeof value.location === "string" ? value.location : "",
-          label: typeof value.label === "string" ? value.label : "",
-        };
-      })
-    : [];
+  const groups = normalizeGroups(source, source.git, source.docs);
+  const activeId =
+    typeof source.activeGroupId === "string" ? source.activeGroupId : "";
+  const active =
+    groups.find((group) => group.id === activeId) || groups[0];
+  const git = active.git;
+  const docs = active.docs;
   return {
+    groups,
+    activeGroupId: active.id,
     git,
     docs,
     mineOnly: source.mineOnly !== false,
@@ -146,20 +130,33 @@ export function normalizeClientSettings(raw) {
   };
 }
 export function cleanSettings(settings, aiEnabled, range, format) {
+  const active = activeGroupOf(settings);
+  const cleanGit = (list) =>
+    (Array.isArray(list) ? list : [])
+      .map((item) => ({
+        location: (item.location || "").trim(),
+        branch: (item.branch || "").trim(),
+        label: (item.label || "").trim(),
+      }))
+      .filter((item) => item.location.length > 0);
+  const cleanDocs = (list) =>
+    (Array.isArray(list) ? list : [])
+      .map((item) => ({
+        location: (item.location || "").trim(),
+        label: (item.label || "").trim(),
+      }))
+      .filter((item) => item.location.length > 0);
+  const groups = groupsOf(settings).map((group) => ({
+    id: group.id,
+    name: group.name,
+    git: cleanGit(group.git),
+    docs: cleanDocs(group.docs),
+  }));
   return {
-    git: settings.git
-      .map((item) => ({
-        location: item.location.trim(),
-        branch: item.branch.trim(),
-        label: item.label.trim(),
-      }))
-      .filter((item) => item.location.length > 0),
-    docs: settings.docs
-      .map((item) => ({
-        location: item.location.trim(),
-        label: item.label.trim(),
-      }))
-      .filter((item) => item.location.length > 0),
+    git: cleanGit(active.git),
+    docs: cleanDocs(active.docs),
+    groups,
+    activeGroupId: active.id,
     aiEnabled: aiEnabled !== false,
     mineOnly: settings.mineOnly !== false,
     excludeMerges: settings.excludeMerges !== false,
@@ -214,6 +211,107 @@ export function currentLocaleId(ctx) {
   }
 }
 export const FORMAT_OPTIONS = ["xlsx", "markdown", "csv", "html"];
+export const DEFAULT_GROUP_ID = "default";
+
+/**
+ * Data sources live in named groups so one installation can keep several sets
+ * (per product, per customer, ...) and switch between them. `git`/`docs` at the
+ * top level stay in sync with the active group: they are what the Host reads
+ * and what an older settings file already contains.
+ */
+export function normalizeGroups(raw, fallbackGit, fallbackDocs) {
+  const source = raw && typeof raw === "object" ? raw : {};
+  const list = Array.isArray(source.groups) ? source.groups : [];
+  const groups = [];
+  for (const item of list) {
+    const spec = item && typeof item === "object" ? item : {};
+    const id = typeof spec.id === "string" && spec.id.length > 0 ? spec.id : uid();
+    const git = normalizeGitList(spec.git);
+    const docs = normalizeDocList(spec.docs);
+    groups.push({
+      id,
+      name:
+        typeof spec.name === "string" && spec.name.trim().length > 0
+          ? spec.name.trim()
+          : "未命名分组",
+      git,
+      docs,
+    });
+  }
+  if (groups.length === 0) {
+    groups.push({
+      id: DEFAULT_GROUP_ID,
+      name: source.groupName || "默认分组",
+      git: normalizeGitList(fallbackGit),
+      docs: normalizeDocList(fallbackDocs),
+    });
+  }
+  return groups;
+}
+
+export function normalizeGitList(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => {
+    const value = item && typeof item === "object" ? item : {};
+    return {
+      _key: uid(),
+      location: typeof value.location === "string" ? value.location : "",
+      branch: typeof value.branch === "string" ? value.branch : "",
+      label: typeof value.label === "string" ? value.label : "",
+    };
+  });
+}
+
+export function normalizeDocList(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => {
+    const value =
+      typeof item === "string" ? { location: item, label: "" } : item || {};
+    return {
+      _key: uid(),
+      location: typeof value.location === "string" ? value.location : "",
+      label: typeof value.label === "string" ? value.label : "",
+    };
+  });
+}
+
+/** Groups of a settings object, always at least one. */
+export function groupsOf(settings) {
+  const source = settings && typeof settings === "object" ? settings : {};
+  return normalizeGroups(source, source.git, source.docs);
+}
+
+export function activeGroupOf(settings) {
+  const groups = groupsOf(settings);
+  const id = settings && typeof settings.activeGroupId === "string" ? settings.activeGroupId : "";
+  return groups.find((group) => group.id === id) || groups[0];
+}
+
+/**
+ * Replace groups and keep the top-level arrays pointed at the active group.
+ * Every mutation goes through here so the two representations cannot drift.
+ */
+export function withGroups(settings, groups, activeGroupId) {
+  const list = groups.length > 0 ? groups : normalizeGroups({}, settings.git, settings.docs);
+  const active = list.find((group) => group.id === activeGroupId) || list[0];
+  return {
+    ...settings,
+    groups: list,
+    activeGroupId: active.id,
+    git: active.git,
+    docs: active.docs,
+  };
+}
+
+/** Rewrite the active group's sources. */
+export function withActiveSources(settings, patch) {
+  const active = activeGroupOf(settings);
+  const groups = groupsOf(settings).map((group) =>
+    group.id === active.id ? { ...group, ...patch } : group,
+  );
+  return withGroups(settings, groups, active.id);
+}
+
 export function formatLabel(format, t) {
   if (format === "markdown") return t("format.markdown", "Markdown");
   if (format === "csv") return t("format.csv", "CSV");

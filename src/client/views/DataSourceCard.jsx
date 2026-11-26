@@ -2,6 +2,62 @@ import React from "react";
 import { useApp } from "../context.jsx";
 import { InfoDot, ScanIcon, TestIcon } from "../icons.jsx";
 
+function GroupPicker({
+  groups,
+  activeGroup,
+  editing,
+  draftName,
+  setDraftName,
+  onChoose,
+  onSubmit,
+  onCancel,
+  t,
+}) {
+  if (editing) {
+    return (
+      <div className="dsdr-group-edit">
+        <input
+          className="dsdr-input dsdr-group-name"
+          value={draftName}
+          autoFocus={true}
+          onChange={(event) => setDraftName(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") onSubmit();
+            if (event.key === "Escape") onCancel();
+          }}
+          placeholder={t("group.namePlaceholder", "分组名称")}
+          aria-label={editing === "rename" ? t("group.rename", "重命名分组") : t("group.add", "新建分组")}
+        />
+        <button type="button" className="dsdr-btn dsdr-btn-primary" onClick={onSubmit}>
+          {editing === "rename" ? t("group.save", "保存") : t("group.create", "创建")}
+        </button>
+        <button type="button" className="dsdr-btn" onClick={onCancel}>
+          {t("confirm.cancel", "取消")}
+        </button>
+      </div>
+    );
+  }
+  return (
+    <select
+      className="dsdr-input dsdr-group-select"
+      value={activeGroup ? activeGroup.id : ""}
+      onChange={(event) => onChoose(event.target.value)}
+      aria-label={t("group.current", "当前分组")}
+    >
+      {groups.map((group) => (
+        <option value={group.id} key={group.id}>
+          {group.name}
+        </option>
+      ))}
+      <option value="__new__">{"+ " + t("group.add", "新建分组") + "…"}</option>
+      <option value="__rename__">{t("group.rename", "重命名分组") + "…"}</option>
+      {groups.length > 1 ? (
+        <option value="__remove__">{t("group.remove", "删除分组") + "…"}</option>
+      ) : null}
+    </select>
+  );
+}
+
 export function DataSourceCard() {
   const {
     settings,
@@ -27,7 +83,18 @@ export function DataSourceCard() {
     testResults,
     dataSourceTab,
     setDataSourceTab,
-    confirm = async () => true,
+    groups = [],
+    activeGroup = null,
+    groupEditing = "",
+    groupDraft = "",
+    setGroupDraft = () => {},
+    chooseGroup = () => {},
+    submitGroup = () => {},
+    cancelGroupEdit = () => {},
+    switchGroup = () => {},
+    addGroup = () => false,
+    renameGroup = () => false,
+    removeGroup = async () => false,    confirm = async () => true,
     t,
   } = useApp();
   return (
@@ -47,19 +114,32 @@ export function DataSourceCard() {
               />
             </div>
           </div>
-          <button
-            type="button"
-            className="dsdr-btn dsdr-btn-with-icon"
-            onClick={testSources}
-            disabled={testingSources}
-          >
-            <TestIcon size={14} />
-            <span>
-              {testingSources
-                ? t("test.testing", "测试中…")
-                : t("test.button", "测试数据源")}
-            </span>
-          </button>
+          <div className="dsdr-actions dsdr-datasource-actions">
+            <GroupPicker
+              groups={groups}
+              activeGroup={activeGroup}
+              editing={groupEditing}
+              draftName={groupDraft}
+              setDraftName={setGroupDraft}
+              onChoose={chooseGroup}
+              onSubmit={submitGroup}
+              onCancel={cancelGroupEdit}
+              t={t}
+            />
+            <button
+              type="button"
+              className="dsdr-btn dsdr-btn-with-icon"
+              onClick={testSources}
+              disabled={testingSources}
+            >
+              <TestIcon size={14} />
+              <span>
+                {testingSources
+                  ? t("test.testing", "测试中…")
+                  : t("test.button", "测试数据源")}
+              </span>
+            </button>
+          </div>
         </div>
         <div className="dsdr-tabs" role="tablist">
           <button
@@ -379,4 +459,8 @@ export function DataSourceCard() {
     </>
   );
 }
+
+
+
+
 

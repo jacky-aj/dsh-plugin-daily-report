@@ -18,6 +18,9 @@ export function ScheduleCard() {
     t,
     confirm = async () => true,
   } = useApp();
+  const [expanded, setExpanded] = React.useState(false);
+  const enabled = settings.scheduleEnabled === true;
+  const showDetails = enabled || expanded;
   return (
     <Card>
       <div className="dsdr-card-head">
@@ -50,6 +53,29 @@ export function ScheduleCard() {
           }}
         />
       </div>
+
+      <div className="dsdr-hint dsdr-schedule-summary">
+        {enabled
+          ? t("schedule.summaryOn", "已启用：") +
+            (settings.scheduleFrequency === "weekly"
+              ? t("schedule.weekly", "每周一")
+              : t("schedule.daily", "每天")) +
+            " " +
+            (settings.scheduleTime || "18:30")
+          : t("schedule.summaryOff", "未启用；需要时再打开开关。")}
+        {enabled ? null : (
+          <button
+            type="button"
+            className="dsdr-link-btn"
+            onClick={() => setExpanded(!expanded)}
+            aria-expanded={expanded}
+          >
+            {expanded ? t("schedule.collapse", "收起配置") : t("schedule.expand", "展开配置")}
+          </button>
+        )}
+      </div>
+      {showDetails ? (
+        <>
       <div className="dsdr-ai-options">
         <div className="dsdr-field">
           <label className="dsdr-label" htmlFor="dsdr-schedule-frequency">
@@ -91,6 +117,7 @@ export function ScheduleCard() {
       <div className="dsdr-hint">
         {t("schedule.hint", "定时汇总使用当前保存的数据源、AI 设置和格式。")}
       </div>
+
       <div className="dsdr-schedule-status">
         <div className="dsdr-schedule-status-head">
           <div className="dsdr-hint">
@@ -203,6 +230,8 @@ export function ScheduleCard() {
           </div>
         )}
       </div>
+        </>
+      ) : null}
     </Card>
   );
 }

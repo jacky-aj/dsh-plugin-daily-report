@@ -4,6 +4,11 @@ export default defineConfig({
   test: {
     include: ["test/**/*.spec.{js,jsx,mjs}"],
     environment: "node",
+    // The integration suites clone throwaway repositories and hit real git. Run
+    // together they routinely pass five seconds, which is a machine-speed
+    // artifact rather than a hang.
+    testTimeout: 20000,
+    hookTimeout: 20000,
     coverage: {
       provider: "v8",
       include: ["src/client/**/*.{js,jsx}", "lib/**/*.js", "index.js"],
@@ -12,17 +17,3 @@ export default defineConfig({
     },
   },
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -359,6 +359,29 @@ const historyFile = await request(
 assert.equal(historyFile.status, 200);
 const emptySettings = await request("/daily-report/state", "PUT", { settings: { git: [], docs: [] } });
 assert.equal(emptySettings.status, 200);
+
+// An empty group is a real group: it must survive the save/reload round trip,
+// otherwise a group the user just created disappears.
+const groupSave = await request("/daily-report/state", "PUT", {
+  settings: {
+    groups: [
+      { id: "g1", name: "项目 A", git: [{ location: repo, branch: "main" }], docs: [] },
+      { id: "g2", name: "空分组", git: [], docs: [] },
+    ],
+    activeGroupId: "g2",
+    git: [],
+    docs: [],
+  },
+});
+assert.equal(groupSave.status, 200);
+const groupSaved = JSON.parse(groupSave.body.toString("utf8")).settings;
+assert.equal(groupSaved.groups.length, 2);
+assert.equal(groupSaved.activeGroupId, "g2");
+const groupReload = await request("/daily-report/state?sessionId=", "GET");
+const groupReloaded = JSON.parse(groupReload.body.toString("utf8")).settings;
+assert.equal(groupReloaded.groups.length, 2);
+assert.equal(groupReloaded.groups[1].name, "空分组");
+assert.equal(emptySettings.status, 200);
 const noSourcesSchedule = await request("/daily-report/schedule/run", "POST", {});
 assert.equal(noSourcesSchedule.status, 400);
 for (const [route, method] of [
@@ -453,3 +476,4 @@ rmSync(root, { recursive: true, force: true });
 
 
 });
+

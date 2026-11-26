@@ -1,5 +1,14 @@
 import React from "react";
-import { API, cleanSettings, uid } from "../helpers.js";
+import {
+  API,
+  activeGroupOf,
+  cleanSettings,
+  groupsOf,
+  normalizeGroups,
+  uid,
+  withActiveSources,
+  withGroups,
+} from "../helpers.js";
 
 export function useDataSources({
   settings,
@@ -22,37 +31,45 @@ export function useDataSources({
   const [testResults, setTestResults] = React.useState(null);
   const [testError, setTestError] = React.useState("");
   const [dataSourceTab, setDataSourceTab] = React.useState("git");
+  const [groupEditing, setGroupEditing] = React.useState("");
+  const [groupDraft, setGroupDraft] = React.useState("");
+  const groups = groupsOf(settings);
+  const activeGroup = activeGroupOf(settings);
 
   function updateGit(index, patch) {
-    setSettings((previous) => ({
-      ...previous,
-      git: previous.git.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, ...patch } : item,
-      ),
-    }));
+    setSettings((previous) =>
+      withActiveSources(previous, {
+        git: previous.git.map((item, itemIndex) =>
+          itemIndex === index ? { ...item, ...patch } : item,
+        ),
+      }),
+    );
   }
 
   function updateDoc(index, patch) {
-    setSettings((previous) => ({
-      ...previous,
-      docs: previous.docs.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, ...patch } : item,
-      ),
-    }));
+    setSettings((previous) =>
+      withActiveSources(previous, {
+        docs: previous.docs.map((item, itemIndex) =>
+          itemIndex === index ? { ...item, ...patch } : item,
+        ),
+      }),
+    );
   }
 
   function addGit() {
-    setSettings((previous) => ({
-      ...previous,
-      git: [...previous.git, { _key: uid(), location: "", branch: "", label: "" }],
-    }));
+    setSettings((previous) =>
+      withActiveSources(previous, {
+        git: [...previous.git, { _key: uid(), location: "", branch: "", label: "" }],
+      }),
+    );
   }
 
   function addDoc() {
-    setSettings((previous) => ({
-      ...previous,
-      docs: [...previous.docs, { _key: uid(), location: "", label: "" }],
-    }));
+    setSettings((previous) =>
+      withActiveSources(previous, {
+        docs: [...previous.docs, { _key: uid(), location: "", label: "" }],
+      }),
+    );
   }
 
   async function removeGit(index) {
@@ -66,10 +83,11 @@ export function useDataSources({
       danger: true,
     });
     if (!accepted) return;
-    setSettings((previous) => ({
-      ...previous,
-      git: previous.git.filter((_, itemIndex) => itemIndex !== index),
-    }));
+    setSettings((previous) =>
+      withActiveSources(previous, {
+        git: previous.git.filter((_, itemIndex) => itemIndex !== index),
+      }),
+    );
   }
 
   async function removeDoc(index) {
@@ -83,10 +101,11 @@ export function useDataSources({
       danger: true,
     });
     if (!accepted) return;
-    setSettings((previous) => ({
-      ...previous,
-      docs: previous.docs.filter((_, itemIndex) => itemIndex !== index),
-    }));
+    setSettings((previous) =>
+      withActiveSources(previous, {
+        docs: previous.docs.filter((_, itemIndex) => itemIndex !== index),
+      }),
+    );
   }
 
   async function testSources() {
@@ -207,10 +226,13 @@ export function useDataSources({
         });
       }
       if (additions.length > 0) {
-        setSettings((previous) => ({
-          ...previous,
-          git: [...previous.git, ...additions],
-        }));
+        // Scanning adds to the ACTIVE GROUP, not just the top-level mirror;
+        // otherwise the rows vanish as soon as the user switches groups.
+        setSettings((previous) =>
+          withActiveSources(previous, {
+            git: [...previous.git, ...additions],
+          }),
+        );
       }
       const warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
       setScanMessage(
@@ -232,6 +254,92 @@ export function useDataSources({
     } finally {
       setScanning(false);
     }
+  }
+
+  /** Selecting a group switches to it; the trailing entries open the form. */
+  function chooseGroup(value) {
+    if (value === "__new__") {
+      setGroupDraft("");
+      setGroupEditing("create");
+      return;
+    }
+    if (value === "__rename__") {
+      setGroupDraft(activeGroupOf(settings).name);
+      setGroupEditing("rename");
+      return;
+    }
+    if (value === "__remove__") {
+      void removeGroup();
+      return;
+    }
+    switchGroup(value);
+  }
+
+  function cancelGroupEdit() {
+    setGroupEditing("");
+    setGroupDraft("");
+  }
+
+  function submitGroup() {
+    const done = groupEditing === "rename" ? renameGroup(groupDraft) : addGroup(groupDraft);
+    if (done) cancelGroupEdit();
+  }
+
+  function switchGroup(id) {
+    setSettings((previous) => withGroups(previous, groupsOf(previous), id));
+  }
+
+  function addGroup(name) {
+    const label = String(name || "").trim();
+    if (label.length === 0) return false;
+    setSettings((previous) => {
+      const list = groupsOf(previous);
+      const created = { id: uid(), name: label, git: [], docs: [] };
+      return withGroups(previous, [...list, created], created.id);
+    });
+    return true;
+  }
+
+  function renameGroup(name) {
+    const label = String(name || "").trim();
+    if (label.length === 0) return false;
+    setSettings((previous) => {
+      const target = activeGroupOf(previous);
+      const list = groupsOf(previous).map((group) =>
+        group.id === target.id ? { ...group, name: label } : group,
+      );
+      return withGroups(previous, list, target.id);
+    });
+    return true;
+  }
+
+  async function removeGroup() {
+    const target = activeGroupOf(settings);
+    if (groups.length <= 1) return false;
+    const accepted = await confirm({
+      title: t("confirm.removeGroup.title", "删除分组？"),
+      message:
+        t("confirm.removeGroup.message", "将删除分组「") +
+        target.name +
+        t("confirm.removeGroup.tail", "」及其中的 ") +
+        target.git.length +
+        t("git.unit", " 个仓库、") +
+        target.docs.length +
+        t("docs.unit", " 个文档。"),
+      confirmLabel: t("confirm.remove", "删除"),
+      cancelLabel: t("confirm.cancel", "取消"),
+      danger: true,
+    });
+    if (!accepted) return false;
+    setSettings((previous) => {
+      const list = groupsOf(previous).filter((group) => group.id !== target.id);
+      if (list.length === 0) {
+        const fallback = normalizeGroups({}, [], []);
+        return withGroups(previous, fallback, fallback[0].id);
+      }
+      return withGroups(previous, list, list[0].id);
+    });
+    return true;
   }
 
   return {
@@ -256,7 +364,20 @@ export function useDataSources({
     toggleScan,
     pickScanDirectory,
     scanAndAdd,
+    groups,
+    activeGroup,
+    groupEditing,
+    groupDraft,
+    setGroupDraft,
+    chooseGroup,
+    submitGroup,
+    cancelGroupEdit,
+    switchGroup,
+    addGroup,
+    renameGroup,
+    removeGroup,
   };
 }
+
 
 

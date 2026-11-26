@@ -51,6 +51,72 @@ describe("ESM hooks", () => {
     expect(result.current.range.start).toBe("2026-11-01");
   });
 
+  it("switches, creates, renames and deletes groups", async () => {
+    const setSettings = vi.fn();
+    const base = {
+      groups: [
+        { id: "a", name: "项目 A", git: [{ _key: "k1", location: "D:/a", branch: "main", label: "" }], docs: [] },
+        { id: "b", name: "项目 B", git: [{ _key: "k2", location: "D:/b", branch: "", label: "" }], docs: [] },
+      ],
+      activeGroupId: "a",
+      git: [{ _key: "k1", location: "D:/a", branch: "main", label: "" }],
+      docs: [],
+    };
+    const { result } = renderHook(() =>
+      useDataSources({
+        settings: base,
+        setSettings,
+        useAi: false,
+        range: { start: "2026-11-01", end: "2026-11-30" },
+        exportFormat: "xlsx",
+        sessionId: "",
+        ctx: {},
+        t,
+        errorMessageFromPayload: () => "error",
+        confirm: async () => false,
+      }),
+    );
+    expect(result.current.groups).toHaveLength(2);
+    expect(result.current.activeGroup.name).toBe("项目 A");
+
+    act(() => result.current.switchGroup("b"));
+    const switched = setSettings.mock.calls[0][0](base);
+    expect(switched.activeGroupId).toBe("b");
+    expect(switched.git.map((item) => item.location)).toEqual(["D:/b"]);
+
+    act(() => result.current.addGroup("新分组"));
+    const added = setSettings.mock.calls[1][0](base);
+    expect(added.groups).toHaveLength(3);
+    expect(added.activeGroupId).not.toBe("a");
+
+    act(() => result.current.renameGroup("改名后"));
+    const renamed = setSettings.mock.calls[2][0](base);
+    expect(renamed.groups.find((group) => group.id === renamed.activeGroupId).name).toBe("改名后");
+
+    await act(async () => result.current.removeGroup());
+    expect(setSettings).toHaveBeenCalledTimes(3); // cancelled: nothing removed
+  });
+
+  it("refuses to delete the last remaining group", async () => {
+    const setSettings = vi.fn();
+    const { result } = renderHook(() =>
+      useDataSources({
+        settings: { git: [], docs: [] },
+        setSettings,
+        useAi: false,
+        range: { start: "2026-11-01", end: "2026-11-30" },
+        exportFormat: "xlsx",
+        sessionId: "",
+        ctx: {},
+        t,
+        errorMessageFromPayload: () => "error",
+        confirm: async () => true,
+      }),
+    );
+    await act(async () => result.current.removeGroup());
+    expect(setSettings).not.toHaveBeenCalled();
+  });
+
   it("updates and removes data sources", async () => {
     const setSettings = vi.fn();
     const { result } = renderHook(() =>
@@ -168,6 +234,7 @@ describe("ESM hooks", () => {
     expect(typeof result.current.runScheduleNow).toBe("function");
   });
 });
+
 
 
 

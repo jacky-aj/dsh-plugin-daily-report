@@ -68,7 +68,7 @@ esbuild bundle
 | `useMenus` | 格式菜单、设置菜单、外部点击关闭 |
 | `useConfirm` | 重要操作二次确认 |
 | `useSettingsTransfer` | 设置保存、导入、导出、清除缓存、还原默认配置 |
-| `useDataSources` | Git / 文档数据源编辑、扫描、测试 |
+| `useDataSources` | Git / 文档数据源编辑、分组切换、批量增删、扫描、测试 |
 | `useGeneration` | 生成任务、轮询、取消 |
 | `usePreview` | 预览编辑、导出、单日重新分析 |
 | `useSchedule` | 定时生成状态和立即运行 |
@@ -176,3 +176,4 @@ if (refused !== undefined) return sendRefusal(res, refused);
 - 宿主校验抛异常按 403 处理
 
 详见 `docs/decisions/0004-request-gate.md`。
+

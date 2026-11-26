@@ -74,7 +74,35 @@ describe("ESM views and components", () => {
     expect(screen.getByDisplayValue("简洁")).toBeTruthy();
   });
 
-  it("renders schedule actions", () => {
+  it("folds the schedule details while disabled", () => {
+    const setSettings = vi.fn();
+    render(
+      withApp(
+        {
+          settings: { scheduleEnabled: false, scheduleFrequency: "daily", scheduleTime: "16:22" },
+          setSettings,
+          scheduleStatus: null,
+          scheduleLoading: false,
+          scheduleError: "",
+          loadScheduleStatus: vi.fn(),
+          runScheduleNow: vi.fn(),
+          t,
+        },
+        <ScheduleCard />,
+      ),
+    );
+    // Only the switch and a one-line summary until the user asks for more.
+    expect(screen.getByText(/未启用/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /立即运行一次/ })).toBeNull();
+    expect(screen.queryByLabelText("生成时间")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "展开配置" }));
+    expect(screen.getByRole("button", { name: /立即运行一次/ })).toBeTruthy();
+    expect(screen.getByLabelText("生成时间")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "收起配置" }));
+    expect(screen.queryByRole("button", { name: /立即运行一次/ })).toBeNull();
+  });
+
+  it("renders schedule actions when enabled", () => {
     render(
       withApp(
         {
@@ -274,6 +302,7 @@ describe("ESM views and components", () => {
     expect(screen.getByText("AI 分析")).toBeTruthy();
   });
 });
+
 
 
 

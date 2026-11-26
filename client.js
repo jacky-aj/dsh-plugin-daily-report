@@ -131,24 +131,14 @@ var __DSH_DAILY_REPORT__ = (() => {
   }
   function normalizeClientSettings(raw) {
     const source = raw && typeof raw === "object" ? raw : {};
-    const git = Array.isArray(source.git) ? source.git.map((item) => ({
-      _key: uid(),
-      location: typeof item.location === "string" ? item.location : "",
-      branch: typeof item.branch === "string" ? item.branch : "",
-      label: typeof item.label === "string" ? item.label : ""
-    })) : [];
-    const docs = Array.isArray(source.docs) ? source.docs.map((item) => {
-      const value = typeof item === "string" ? {
-        location: item,
-        label: ""
-      } : item || {};
-      return {
-        _key: uid(),
-        location: typeof value.location === "string" ? value.location : "",
-        label: typeof value.label === "string" ? value.label : ""
-      };
-    }) : [];
+    const groups = normalizeGroups(source, source.git, source.docs);
+    const activeId = typeof source.activeGroupId === "string" ? source.activeGroupId : "";
+    const active = groups.find((group) => group.id === activeId) || groups[0];
+    const git = active.git;
+    const docs = active.docs;
     return {
+      groups,
+      activeGroupId: active.id,
       git,
       docs,
       mineOnly: source.mineOnly !== false,
@@ -165,16 +155,27 @@ var __DSH_DAILY_REPORT__ = (() => {
     };
   }
   function cleanSettings(settings, aiEnabled, range, format) {
+    const active = activeGroupOf(settings);
+    const cleanGit = (list) => (Array.isArray(list) ? list : []).map((item) => ({
+      location: (item.location || "").trim(),
+      branch: (item.branch || "").trim(),
+      label: (item.label || "").trim()
+    })).filter((item) => item.location.length > 0);
+    const cleanDocs = (list) => (Array.isArray(list) ? list : []).map((item) => ({
+      location: (item.location || "").trim(),
+      label: (item.label || "").trim()
+    })).filter((item) => item.location.length > 0);
+    const groups = groupsOf(settings).map((group) => ({
+      id: group.id,
+      name: group.name,
+      git: cleanGit(group.git),
+      docs: cleanDocs(group.docs)
+    }));
     return {
-      git: settings.git.map((item) => ({
-        location: item.location.trim(),
-        branch: item.branch.trim(),
-        label: item.label.trim()
-      })).filter((item) => item.location.length > 0),
-      docs: settings.docs.map((item) => ({
-        location: item.location.trim(),
-        label: item.label.trim()
-      })).filter((item) => item.location.length > 0),
+      git: cleanGit(active.git),
+      docs: cleanDocs(active.docs),
+      groups,
+      activeGroupId: active.id,
       aiEnabled: aiEnabled !== false,
       mineOnly: settings.mineOnly !== false,
       excludeMerges: settings.excludeMerges !== false,
@@ -219,6 +220,83 @@ var __DSH_DAILY_REPORT__ = (() => {
     }
   }
   var FORMAT_OPTIONS = ["xlsx", "markdown", "csv", "html"];
+  var DEFAULT_GROUP_ID = "default";
+  function normalizeGroups(raw, fallbackGit, fallbackDocs) {
+    const source = raw && typeof raw === "object" ? raw : {};
+    const list = Array.isArray(source.groups) ? source.groups : [];
+    const groups = [];
+    for (const item of list) {
+      const spec = item && typeof item === "object" ? item : {};
+      const id = typeof spec.id === "string" && spec.id.length > 0 ? spec.id : uid();
+      const git = normalizeGitList(spec.git);
+      const docs = normalizeDocList(spec.docs);
+      groups.push({
+        id,
+        name: typeof spec.name === "string" && spec.name.trim().length > 0 ? spec.name.trim() : "\u672A\u547D\u540D\u5206\u7EC4",
+        git,
+        docs
+      });
+    }
+    if (groups.length === 0) {
+      groups.push({
+        id: DEFAULT_GROUP_ID,
+        name: source.groupName || "\u9ED8\u8BA4\u5206\u7EC4",
+        git: normalizeGitList(fallbackGit),
+        docs: normalizeDocList(fallbackDocs)
+      });
+    }
+    return groups;
+  }
+  function normalizeGitList(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw.map((item) => {
+      const value = item && typeof item === "object" ? item : {};
+      return {
+        _key: uid(),
+        location: typeof value.location === "string" ? value.location : "",
+        branch: typeof value.branch === "string" ? value.branch : "",
+        label: typeof value.label === "string" ? value.label : ""
+      };
+    });
+  }
+  function normalizeDocList(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw.map((item) => {
+      const value = typeof item === "string" ? { location: item, label: "" } : item || {};
+      return {
+        _key: uid(),
+        location: typeof value.location === "string" ? value.location : "",
+        label: typeof value.label === "string" ? value.label : ""
+      };
+    });
+  }
+  function groupsOf(settings) {
+    const source = settings && typeof settings === "object" ? settings : {};
+    return normalizeGroups(source, source.git, source.docs);
+  }
+  function activeGroupOf(settings) {
+    const groups = groupsOf(settings);
+    const id = settings && typeof settings.activeGroupId === "string" ? settings.activeGroupId : "";
+    return groups.find((group) => group.id === id) || groups[0];
+  }
+  function withGroups(settings, groups, activeGroupId) {
+    const list = groups.length > 0 ? groups : normalizeGroups({}, settings.git, settings.docs);
+    const active = list.find((group) => group.id === activeGroupId) || list[0];
+    return {
+      ...settings,
+      groups: list,
+      activeGroupId: active.id,
+      git: active.git,
+      docs: active.docs
+    };
+  }
+  function withActiveSources(settings, patch) {
+    const active = activeGroupOf(settings);
+    const groups = groupsOf(settings).map(
+      (group) => group.id === active.id ? { ...group, ...patch } : group
+    );
+    return withGroups(settings, groups, active.id);
+  }
   function formatLabel(format, t) {
     if (format === "markdown") return t("format.markdown", "Markdown");
     if (format === "csv") return t("format.csv", "CSV");
@@ -233,7 +311,7 @@ var __DSH_DAILY_REPORT__ = (() => {
   }
 
   // raw:E:\myproject\dsh-plugin-daily-report\src\client\styles.css
-  var styles_default = ".dsdr-root { height: 100%; overflow: auto; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); }\n.dsdr-page { box-sizing: border-box; max-width: 1080px; margin: 0 auto; padding: 28px 28px 56px; display: flex; flex-direction: column; gap: 16px; }\n.dsdr-hero { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 14px; }\n.dsdr-hero-copy { flex: 1; min-width: 0; }\n.dsdr-hero-action { display: flex; flex: none; flex-direction: column; align-items: flex-end; gap: 5px; margin-left: auto; }\n.dsdr-hero-buttons { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }\n.dsdr-save-btn { min-height: 38px; background: #3b4046; border-color: #3b4046; color: #ffffff; font-weight: 600; }\n.dsdr-save-btn:hover { background: #292d31; border-color: #292d31; }\n.dsdr-save-btn:disabled { background: #666b70; border-color: #666b70; color: #ffffff; opacity: .8; }\n.dsdr-generate { min-height: 38px; padding: 9px 16px; font-size: 13px; white-space: nowrap; }\n.dsdr-btn-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }\n.dsdr-split { position: relative; display: inline-flex; align-items: stretch; }\n.dsdr-split .dsdr-generate { border-radius: 8px 0 0 8px; }\n.dsdr-save-split .dsdr-save-btn:first-child { border-radius: 8px 0 0 8px; }\n.dsdr-save-split .dsdr-split-toggle { border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255, 255, 255, .25); background: #3b4046; border-color: #3b4046; }\n.dsdr-save-split .dsdr-split-toggle:hover { background: #292d31; border-color: #292d31; }\n.dsdr-split > .dsdr-split-toggle { min-height: 38px; padding: 0 9px; border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255, 255, 255, .32); }\n.dsdr-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; min-width: 190px; padding: 5px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 10px; background: var(--dsw-alias-bg-overlay); box-shadow: 0 10px 28px rgba(0, 0, 0, .2); }\n.dsdr-menu-title { padding: 5px 8px 4px; color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }\n.dsdr-menu-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 7px 8px; border: 0; border-radius: 7px; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; line-height: 18px; text-align: left; cursor: pointer; }\n.dsdr-menu-item:hover { background: var(--dsw-alias-bg-layer-2); }\n.dsdr-menu-item.is-active { background: var(--dsw-alias-bg-layer-2); font-weight: 600; }\n.dsdr-menu-item-start { justify-content: flex-start; gap: 9px; }\n.dsdr-menu-check { width: 14px; color: #146b5a; text-align: center; }\n.dsdr-save { color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }\n.dsdr-mark { flex: none; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; background: var(--dsw-alias-bg-layer-2); border: 1px solid var(--dsw-alias-border-l1); }\n.dsdr-title { margin: 0; font-size: 22px; line-height: 30px; font-weight: 600; }\n.dsdr-sub { margin: 2px 0 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; }\n.dsdr-card { border: 1px solid var(--dsw-alias-border-l1); border-radius: 12px; background: var(--dsw-alias-bg-layer-1); padding: 16px 18px; }\n.dsdr-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }\n.dsdr-card-title { font-size: 14px; line-height: 22px; font-weight: 600; }\n.dsdr-ai-title { display: inline-block; font-size: 15px; font-weight: 700; letter-spacing: .03em; background: linear-gradient(100deg, #0f766e 0%, #06b6d4 22%, #3b82f6 46%, #8b5cf6 70%, #0f766e 100%); background-size: 320% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 7px rgba(20, 184, 166, .22)); animation: dsdr-ai-gradient 5s ease-in-out infinite; }\n@keyframes dsdr-ai-gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }\n@media (prefers-reduced-motion: reduce) { .dsdr-ai-title { animation: none; } }\n.dsdr-card-desc { margin-top: 2px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-title-with-info { display: flex; align-items: center; gap: 6px; min-width: 0; }\n.dsdr-info { position: relative; display: inline-flex; flex: none; align-items: center; justify-content: center; width: 15px; height: 15px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 50%; color: var(--dsw-alias-label-secondary); font-family: Georgia, serif; font-size: 10px; font-style: italic; font-weight: 700; line-height: 1; cursor: help; }\n.dsdr-info:hover, .dsdr-info:focus-visible { border-color: #146b5a; color: #146b5a; outline: none; }\n.dsdr-info::after { content: attr(data-tip); position: absolute; top: calc(100% + 8px); left: 50%; z-index: 80; width: max-content; max-width: 280px; padding: 7px 9px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: var(--dsw-alias-bg-overlay); color: var(--dsw-alias-label-primary); box-shadow: 0 7px 20px rgba(0, 0, 0, .2); font-family: inherit; font-size: 11px; font-style: normal; font-weight: 400; line-height: 17px; text-align: left; white-space: normal; opacity: 0; visibility: hidden; transform: translate(-50%, -3px); transition: opacity .15s ease, transform .15s ease, visibility .15s ease; pointer-events: none; }\n.dsdr-info:hover::after, .dsdr-info:focus-visible::after { opacity: 1; visibility: visible; transform: translate(-50%, 0); }\n.dsdr-range { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; }\n.dsdr-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }\n.dsdr-label { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-input { box-sizing: border-box; width: 100%; height: 32px; padding: 4px 9px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font: inherit; font-size: 13px; }\n.dsdr-input:focus { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }\n.dsdr-input::placeholder { color: var(--dsw-alias-label-secondary); opacity: .75; }\n.dsdr-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }\n.dsdr-btn { box-sizing: border-box; border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px; background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; font-weight: 500; line-height: 20px; padding: 5px 11px; cursor: pointer; }\n.dsdr-btn:hover { background: var(--dsw-alias-bg-layer-1); border-color: var(--dsw-alias-brand-primary); }\n.dsdr-btn:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }\n.dsdr-btn:disabled { opacity: .7; cursor: not-allowed; }\n.dsdr-btn-primary { background: #146b5a; border-color: #146b5a; color: #ffffff; font-weight: 600; box-shadow: 0 2px 6px rgba(0, 0, 0, .18); }\n.dsdr-btn-primary:hover { background: #0f5547; border-color: #0f5547; opacity: 1; }\n.dsdr-btn-primary:disabled { background: #6b8a82; border-color: #6b8a82; color: #ffffff; opacity: .8; }\n.dsdr-btn-danger { border-color: transparent; background: transparent; color: var(--dsw-alias-state-error-primary); font-weight: 600; }\n.dsdr-btn-danger:hover { background: var(--dsw-alias-bg-layer-2); border-color: transparent; }\n.dsdr-check { display: inline-flex; align-items: center; gap: 7px; color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 20px; cursor: pointer; white-space: nowrap; }\n.dsdr-check input { width: 15px; height: 15px; margin: 0; accent-color: #15557f; cursor: pointer; }\n.dsdr-check.is-disabled { color: var(--dsw-alias-label-secondary); cursor: not-allowed; opacity: .7; }\n.dsdr-check.is-disabled input { cursor: not-allowed; }\n.dsdr-switch { position: relative; display: inline-flex; align-items: center; cursor: pointer; }\n.dsdr-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }\n.dsdr-switch-track { position: relative; width: 44px; height: 24px; border: 0; border-radius: 999px; background: var(--dsw-alias-bg-layer-2); box-shadow: inset 0 0 0 1px var(--dsw-alias-border-l2); transition: background .18s ease, box-shadow .18s ease; }\n.dsdr-switch-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, .28); transition: transform .18s ease, background .18s ease; }\n.dsdr-switch input:checked + .dsdr-switch-track { background: #146b5a; box-shadow: inset 0 0 0 1px #146b5a; }\n.dsdr-switch input:checked + .dsdr-switch-track .dsdr-switch-thumb { transform: translateX(20px); background: #ffffff; }\n.dsdr-switch input:focus-visible + .dsdr-switch-track { outline: 2px solid #146b5a; outline-offset: 2px; }\n.dsdr-switch.is-disabled { opacity: .55; cursor: not-allowed; }\n.dsdr-switch.is-disabled input { cursor: not-allowed; }\n.dsdr-progress-card { display: flex; flex-direction: column; gap: 7px; }\n.dsdr-progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 12px; line-height: 18px; color: var(--dsw-alias-label-primary); }\n.dsdr-progress-value { flex: none; color: var(--dsw-alias-label-secondary); font-variant-numeric: tabular-nums; }\n.dsdr-progress-track { height: 6px; overflow: hidden; border-radius: 999px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-progress-fill { height: 100%; border-radius: 999px; background: #15557f; transition: width .3s ease; }\n.dsdr-progress-track.is-indeterminate .dsdr-progress-fill { width: 35% !important; animation: dsdr-progress 1.2s ease-in-out infinite; }\n@keyframes dsdr-progress { 0% { transform: translateX(-110%); } 100% { transform: translateX(320%); } }\n.dsdr-ai-result { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-preview-overall { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }\n.dsdr-textarea { box-sizing: border-box; width: 100%; min-height: 64px; resize: vertical; padding: 7px 9px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; line-height: 19px; }\n.dsdr-textarea:focus { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }\n.dsdr-manual-add { display: grid; grid-template-columns: 145px minmax(0, 1fr) auto; gap: 8px; align-items: center; margin: 10px 0 14px; }\n.dsdr-preview-list { display: flex; flex-direction: column; gap: 10px; }\n.dsdr-preview-day { display: flex; flex-direction: column; gap: 7px; padding: 11px 12px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-preview-day-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }\n.dsdr-preview-toggle { display: flex; flex: 1; align-items: center; flex-wrap: wrap; gap: 4px 6px; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; text-align: left; cursor: pointer; }\n.dsdr-preview-toggle:hover .dsdr-preview-date { color: var(--dsw-alias-brand-primary); }\n.dsdr-preview-chevron { flex: none; width: 13px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 20px; }\n.dsdr-preview-badge { display: inline-flex; align-items: center; padding: 1px 6px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 999px; color: var(--dsw-alias-label-secondary); font-size: 10px; line-height: 16px; }\n.dsdr-preview-body { display: flex; flex-direction: column; gap: 7px; margin-top: 2px; padding-top: 8px; border-top: 1px dashed var(--dsw-alias-border-l1); }\n.dsdr-preview-date { font-size: 13px; line-height: 20px; font-weight: 600; }\n.dsdr-preview-raw { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 19px; }\n.dsdr-manual-list { display: flex; flex-wrap: wrap; gap: 6px; }\n.dsdr-manual-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 2px 6px 2px 9px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 999px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font-size: 11px; line-height: 18px; overflow-wrap: anywhere; }\n.dsdr-manual-remove { border: 0; background: transparent; color: var(--dsw-alias-state-error-primary); font: inherit; font-size: 14px; line-height: 16px; padding: 0 1px; cursor: pointer; }\n.dsdr-ai-text { margin-top: 5px; color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 20px; white-space: pre-wrap; }\n.dsdr-filter-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 10px; }\n.dsdr-datasource-tabs { margin-bottom: -16px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }\n.dsdr-datasource-panel { border-top-left-radius: 0; border-top-right-radius: 0; }\n.dsdr-tabs { display: flex; align-items: center; gap: 4px; margin-top: 12px; border-bottom: 1px solid var(--dsw-alias-border-l1); }\n.dsdr-tab { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px 8px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--dsw-alias-label-secondary); font: inherit; font-size: 12px; line-height: 18px; cursor: pointer; }\n.dsdr-tab:hover { color: var(--dsw-alias-label-primary); }\n.dsdr-tab.is-active { color: var(--dsw-alias-label-primary); border-bottom-color: #146b5a; font-weight: 600; }\n.dsdr-tab-count { display: inline-flex; min-width: 17px; height: 17px; align-items: center; justify-content: center; padding: 0 5px; border-radius: 999px; background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-secondary); font-size: 10px; line-height: 17px; }\n.dsdr-filter-author { flex: 1 1 280px; min-width: 220px; }\n.dsdr-ai-options { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-top: 10px; }\n.dsdr-schedule-status { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--dsw-alias-border-l1); }\n.dsdr-schedule-status-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 10px; }\n.dsdr-history-list { display: flex; flex-wrap: wrap; gap: 4px 12px; }\n.dsdr-history-link { color: #146b5a; font-size: 12px; line-height: 18px; text-decoration: none; }\n.dsdr-history-link:hover { text-decoration: underline; }\n.dsdr-test-results { display: flex; flex-direction: column; gap: 5px; margin: 0 0 10px; padding: 8px 10px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-scan { display: flex; flex-direction: column; gap: 7px; margin: 0 0 12px; padding: 12px; border: 1px dashed var(--dsw-alias-border-l2); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-scan-title { font-size: 13px; line-height: 20px; font-weight: 600; }\n.dsdr-scan-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }\n.dsdr-source { display: grid; grid-template-columns: minmax(0, 1.5fr) 150px 34px; gap: 8px; align-items: end; margin-top: 8px; }\n.dsdr-source-docs { grid-template-columns: minmax(0, 1fr) minmax(120px, .35fr) 34px; }\n.dsdr-icon-btn { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; line-height: 1; font-size: 18px; }\n.dsdr-hint { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-error { border: 1px solid var(--dsw-alias-state-error-primary); border-radius: 9px; color: var(--dsw-alias-state-error-primary); background: transparent; padding: 9px 12px; font-size: 12px; line-height: 18px; white-space: pre-wrap; }\n.dsdr-error-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }\n.dsdr-notice { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-ok { color: var(--dsw-alias-state-success-primary); }\n.dsdr-warn { color: var(--dsw-alias-state-warn-primary); }\n.dsdr-bad { color: var(--dsw-alias-state-error-primary); }\n.dsdr-empty { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; padding: 10px 0 2px; }\n.dsdr-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }\n.dsdr-stat { border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; padding: 10px 12px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-stat-value { font-size: 20px; line-height: 26px; font-weight: 600; }\n.dsdr-stat-label { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-list { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }\n.dsdr-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 18px; }\n.dsdr-dot { flex: none; width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: var(--dsw-alias-state-idle-primary); }\n.dsdr-dot.ok { background: var(--dsw-alias-state-success-primary); }\n.dsdr-dot.warn { background: var(--dsw-alias-state-warn-primary); }\n.dsdr-dot.error { background: var(--dsw-alias-state-error-primary); }\n.dsdr-source-name { font-weight: 500; }\n.dsdr-source-meta { color: var(--dsw-alias-label-secondary); }\n.dsdr-code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; }\n.dsdr-footer { color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 17px; }\n.dsdr-spacer { flex: 1; }\n@media (max-width: 780px) { .dsdr-page { padding: 20px 16px 40px; } .dsdr-hero-action { flex: 1 0 100%; width: 100%; align-items: stretch; margin-left: 0; } .dsdr-hero-buttons { width: 100%; } .dsdr-hero-buttons .dsdr-btn { flex: 1; } .dsdr-split { flex: 1; } .dsdr-split .dsdr-generate { flex: 1; } .dsdr-generate { width: 100%; } .dsdr-ai-options { grid-template-columns: 1fr; } .dsdr-range { grid-template-columns: 1fr 1fr; } .dsdr-range .dsdr-actions { grid-column: 1 / -1; } .dsdr-stats { grid-template-columns: 1fr 1fr; } .dsdr-scan-row { grid-template-columns: 1fr; } .dsdr-manual-add { grid-template-columns: 1fr; } .dsdr-source, .dsdr-source-docs { grid-template-columns: 1fr; } .dsdr-source .dsdr-icon-btn { justify-self: end; } }\n\n.dsdr-confirm-backdrop { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, .38); }\n.dsdr-confirm { width: min(400px, 100%); box-sizing: border-box; padding: 18px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 12px; background: var(--dsw-alias-bg-overlay); box-shadow: 0 18px 48px rgba(0, 0, 0, .28); }\n.dsdr-confirm-title { margin: 0 0 8px; font-size: 15px; line-height: 22px; }\n.dsdr-confirm-message { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 19px; white-space: pre-wrap; }\n.dsdr-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }\n\n\n.dsdr-confirm .dsdr-btn-danger { background: #b42318; border-color: #b42318; color: #ffffff; }\n.dsdr-confirm .dsdr-btn-danger:hover { background: #912018; border-color: #912018; }\n\n\n.dsdr-confirm-backdrop { pointer-events: auto; background: rgba(0, 0, 0, .5); }\n.dsdr-confirm { pointer-events: auto; background: var(--dsw-alias-bg-overlay, var(--dsw-alias-bg-base, #ffffff)); color: var(--dsw-alias-label-primary, #1f2328); }\n.dsdr-confirm .dsdr-btn { pointer-events: auto; }\n\n\n\n.dsdr-confirm { background: #1f2328; color: #f5f7fa; border-color: rgba(255, 255, 255, .16); }\n.dsdr-confirm-title { color: #f5f7fa; }\n.dsdr-confirm-message { color: #c9d1d9; }\n\n\n.dsdr-confirm { background: transparent !important; border: 0 !important; box-shadow: none !important; }\n.dsdr-confirm-panel { width: 100%; background: #1f2328 !important; color: #f5f7fa; }\n\r\n\n.dsdr-toast-wrap { position: fixed; left: 50%; bottom: 28px; z-index: 1200; transform: translateX(-50%); pointer-events: none; }\n.dsdr-toast { display: flex; align-items: center; gap: 8px; max-width: min(520px, calc(100vw - 48px)); padding: 9px 12px 9px 10px; border: 1px solid rgba(255, 255, 255, .14); border-radius: 10px; background: #1f2328; color: #f5f7fa; font-size: 12px; line-height: 18px; box-shadow: 0 12px 32px rgba(0, 0, 0, .36); pointer-events: auto; animation: dsdr-toast-in .18s ease-out; }\n.dsdr-toast-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; flex: none; border-radius: 50%; background: #146b5a; color: #ffffff; }\n.dsdr-toast-icon.is-error { background: #b42318; }\n.dsdr-toast-text { min-width: 0; overflow-wrap: anywhere; }\n.dsdr-toast-close { flex: none; width: 18px; height: 18px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: #9aa4ad; font-size: 14px; line-height: 16px; cursor: pointer; }\n.dsdr-toast-close:hover { background: rgba(255, 255, 255, .1); color: #ffffff; }\n@keyframes dsdr-toast-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }\n\r\n\n.dsdr-menu-sep { height: 1px; margin: 4px 6px; background: var(--dsw-alias-border-l2); }\n.dsdr-menu-item-danger { color: #e5534b; }\n.dsdr-menu-item-danger:hover { background: rgba(229, 83, 75, .12); }\n\r\n";
+  var styles_default = ".dsdr-root { height: 100%; overflow: auto; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); }\n.dsdr-page { box-sizing: border-box; max-width: 1080px; margin: 0 auto; padding: 28px 28px 56px; display: flex; flex-direction: column; gap: 16px; }\n.dsdr-hero { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 14px; }\n.dsdr-hero-copy { flex: 1; min-width: 0; }\n.dsdr-hero-action { display: flex; flex: none; flex-direction: column; align-items: flex-end; gap: 5px; margin-left: auto; }\n.dsdr-hero-buttons { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }\n.dsdr-save-btn { min-height: 38px; background: var(--dsw-alias-bg-layer-2); border-color: var(--dsw-alias-border-l2); color: var(--dsw-alias-label-primary); font-weight: 600; }\n.dsdr-save-btn:hover { background: var(--dsw-alias-bg-layer-1); border-color: var(--dsw-alias-brand-primary); }\n.dsdr-save-btn:disabled { opacity: .7; }\n.dsdr-generate { min-height: 38px; padding: 9px 16px; font-size: 13px; white-space: nowrap; }\n.dsdr-btn-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }\n.dsdr-split { position: relative; display: inline-flex; align-items: stretch; }\n.dsdr-split .dsdr-generate { border-radius: 8px 0 0 8px; }\n.dsdr-save-split .dsdr-save-btn:first-child { border-radius: 8px 0 0 8px; }\n.dsdr-save-split .dsdr-split-toggle { border-radius: 0 8px 8px 0; border-left: 1px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-2); border-color: var(--dsw-alias-border-l2); color: var(--dsw-alias-label-primary); }\n.dsdr-save-split .dsdr-split-toggle:hover { background: var(--dsw-alias-bg-layer-1); }\n.dsdr-split > .dsdr-split-toggle { min-height: 38px; padding: 0 9px; border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255, 255, 255, .32); }\n.dsdr-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; min-width: 190px; padding: 5px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 10px; background: var(--dsw-alias-bg-overlay); box-shadow: 0 10px 28px rgba(0, 0, 0, .2); }\n.dsdr-menu-title { padding: 5px 8px 4px; color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }\n.dsdr-menu-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 7px 8px; border: 0; border-radius: 7px; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; line-height: 18px; text-align: left; cursor: pointer; }\n.dsdr-menu-item:hover { background: var(--dsw-alias-bg-layer-2); }\n.dsdr-menu-item.is-active { background: var(--dsw-alias-bg-layer-2); font-weight: 600; }\n.dsdr-menu-item-start { justify-content: flex-start; gap: 9px; }\n.dsdr-menu-check { width: 14px; color: #146b5a; text-align: center; }\n.dsdr-save { color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 16px; }\n.dsdr-mark { flex: none; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; background: var(--dsw-alias-bg-layer-2); border: 1px solid var(--dsw-alias-border-l1); }\n.dsdr-title { margin: 0; font-size: 22px; line-height: 30px; font-weight: 600; }\n.dsdr-sub { margin: 2px 0 0; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; }\n.dsdr-card { border: 1px solid var(--dsw-alias-border-l1); border-radius: 12px; background: var(--dsw-alias-bg-layer-1); padding: 16px 18px; }\n.dsdr-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }\n.dsdr-card-title { font-size: 14px; line-height: 22px; font-weight: 600; }\n.dsdr-ai-title { display: inline-block; font-size: 15px; font-weight: 700; letter-spacing: .03em; background: linear-gradient(100deg, #0f766e 0%, #06b6d4 22%, #3b82f6 46%, #8b5cf6 70%, #0f766e 100%); background-size: 320% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 7px rgba(20, 184, 166, .22)); animation: dsdr-ai-gradient 5s ease-in-out infinite; }\n@keyframes dsdr-ai-gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }\n@media (prefers-reduced-motion: reduce) { .dsdr-ai-title { animation: none; } }\n.dsdr-card-desc { margin-top: 2px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-title-with-info { display: flex; align-items: center; gap: 6px; min-width: 0; }\n.dsdr-info { position: relative; display: inline-flex; flex: none; align-items: center; justify-content: center; width: 15px; height: 15px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 50%; color: var(--dsw-alias-label-secondary); font-family: Georgia, serif; font-size: 10px; font-style: italic; font-weight: 700; line-height: 1; cursor: help; }\n.dsdr-info:hover, .dsdr-info:focus-visible { border-color: #146b5a; color: #146b5a; outline: none; }\n.dsdr-info::after { content: attr(data-tip); position: absolute; top: calc(100% + 8px); left: 50%; z-index: 80; width: max-content; max-width: 280px; padding: 7px 9px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: var(--dsw-alias-bg-overlay); color: var(--dsw-alias-label-primary); box-shadow: 0 7px 20px rgba(0, 0, 0, .2); font-family: inherit; font-size: 11px; font-style: normal; font-weight: 400; line-height: 17px; text-align: left; white-space: normal; opacity: 0; visibility: hidden; transform: translate(-50%, -3px); transition: opacity .15s ease, transform .15s ease, visibility .15s ease; pointer-events: none; }\n.dsdr-info:hover::after, .dsdr-info:focus-visible::after { opacity: 1; visibility: visible; transform: translate(-50%, 0); }\n.dsdr-range { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; }\n.dsdr-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }\n.dsdr-label { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-input { box-sizing: border-box; width: 100%; height: 32px; padding: 4px 9px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font: inherit; font-size: 13px; }\n.dsdr-input:focus { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }\n.dsdr-input::placeholder { color: var(--dsw-alias-label-secondary); opacity: .75; }\n.dsdr-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }\n.dsdr-btn { box-sizing: border-box; border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px; background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; font-weight: 500; line-height: 20px; padding: 5px 11px; cursor: pointer; }\n.dsdr-btn:hover { background: var(--dsw-alias-bg-layer-1); border-color: var(--dsw-alias-brand-primary); }\n.dsdr-btn:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }\n.dsdr-btn:disabled { opacity: .7; cursor: not-allowed; }\n.dsdr-btn-primary { background: #146b5a; border-color: #146b5a; color: #ffffff; font-weight: 600; box-shadow: 0 2px 6px rgba(0, 0, 0, .18); }\n.dsdr-btn-primary:hover { background: #0f5547; border-color: #0f5547; opacity: 1; }\n.dsdr-btn-primary:disabled { background: #6b8a82; border-color: #6b8a82; color: #ffffff; opacity: .8; }\n.dsdr-btn-danger { border-color: transparent; background: transparent; color: var(--dsw-alias-state-error-primary); font-weight: 600; }\n.dsdr-btn-danger:hover { background: var(--dsw-alias-bg-layer-2); border-color: transparent; }\n.dsdr-check { display: inline-flex; align-items: center; gap: 7px; color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 20px; cursor: pointer; white-space: nowrap; }\n.dsdr-check input { width: 15px; height: 15px; margin: 0; accent-color: #15557f; cursor: pointer; }\n.dsdr-check.is-disabled { color: var(--dsw-alias-label-secondary); cursor: not-allowed; opacity: .7; }\n.dsdr-check.is-disabled input { cursor: not-allowed; }\n.dsdr-switch { position: relative; display: inline-flex; align-items: center; cursor: pointer; }\n.dsdr-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }\n.dsdr-switch-track { position: relative; width: 44px; height: 24px; border: 0; border-radius: 999px; background: var(--dsw-alias-bg-layer-2); box-shadow: inset 0 0 0 1px var(--dsw-alias-border-l2); transition: background .18s ease, box-shadow .18s ease; }\n.dsdr-switch-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, .28); transition: transform .18s ease, background .18s ease; }\n.dsdr-switch input:checked + .dsdr-switch-track { background: #146b5a; box-shadow: inset 0 0 0 1px #146b5a; }\n.dsdr-switch input:checked + .dsdr-switch-track .dsdr-switch-thumb { transform: translateX(20px); background: #ffffff; }\n.dsdr-switch input:focus-visible + .dsdr-switch-track { outline: 2px solid #146b5a; outline-offset: 2px; }\n.dsdr-switch.is-disabled { opacity: .55; cursor: not-allowed; }\n.dsdr-switch.is-disabled input { cursor: not-allowed; }\n.dsdr-progress-card { display: flex; flex-direction: column; gap: 7px; }\n.dsdr-progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 12px; line-height: 18px; color: var(--dsw-alias-label-primary); }\n.dsdr-progress-value { flex: none; color: var(--dsw-alias-label-secondary); font-variant-numeric: tabular-nums; }\n.dsdr-progress-track { height: 6px; overflow: hidden; border-radius: 999px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-progress-fill { height: 100%; border-radius: 999px; background: #15557f; transition: width .3s ease; }\n.dsdr-progress-track.is-indeterminate .dsdr-progress-fill { width: 35% !important; animation: dsdr-progress 1.2s ease-in-out infinite; }\n@keyframes dsdr-progress { 0% { transform: translateX(-110%); } 100% { transform: translateX(320%); } }\n.dsdr-ai-result { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-preview-overall { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }\n.dsdr-textarea { box-sizing: border-box; width: 100%; min-height: 64px; resize: vertical; padding: 7px 9px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 7px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; line-height: 19px; }\n.dsdr-textarea:focus { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }\n.dsdr-manual-add { display: grid; grid-template-columns: 145px minmax(0, 1fr) auto; gap: 8px; align-items: center; margin: 10px 0 14px; }\n.dsdr-preview-list { display: flex; flex-direction: column; gap: 10px; }\n.dsdr-preview-day { display: flex; flex-direction: column; gap: 7px; padding: 11px 12px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-preview-day-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }\n.dsdr-preview-toggle { display: flex; flex: 1; align-items: center; flex-wrap: wrap; gap: 4px 6px; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--dsw-alias-label-primary); font: inherit; text-align: left; cursor: pointer; }\n.dsdr-preview-toggle:hover .dsdr-preview-date { color: var(--dsw-alias-brand-primary); }\n.dsdr-preview-chevron { flex: none; width: 13px; color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 20px; }\n.dsdr-preview-badge { display: inline-flex; align-items: center; padding: 1px 6px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 999px; color: var(--dsw-alias-label-secondary); font-size: 10px; line-height: 16px; }\n.dsdr-preview-body { display: flex; flex-direction: column; gap: 7px; margin-top: 2px; padding-top: 8px; border-top: 1px dashed var(--dsw-alias-border-l1); }\n.dsdr-preview-date { font-size: 13px; line-height: 20px; font-weight: 600; }\n.dsdr-preview-raw { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 19px; }\n.dsdr-manual-list { display: flex; flex-wrap: wrap; gap: 6px; }\n.dsdr-manual-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 2px 6px 2px 9px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 999px; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font-size: 11px; line-height: 18px; overflow-wrap: anywhere; }\n.dsdr-manual-remove { border: 0; background: transparent; color: var(--dsw-alias-state-error-primary); font: inherit; font-size: 14px; line-height: 16px; padding: 0 1px; cursor: pointer; }\n.dsdr-ai-text { margin-top: 5px; color: var(--dsw-alias-label-primary); font-size: 12px; line-height: 20px; white-space: pre-wrap; }\n.dsdr-filter-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 10px; }\n.dsdr-datasource-tabs { margin-bottom: -16px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }\n.dsdr-datasource-panel { border-top-left-radius: 0; border-top-right-radius: 0; }\n.dsdr-tabs { display: flex; align-items: center; gap: 4px; margin-top: 12px; border-bottom: 1px solid var(--dsw-alias-border-l1); }\n.dsdr-tab { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px 8px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--dsw-alias-label-secondary); font: inherit; font-size: 12px; line-height: 18px; cursor: pointer; }\n.dsdr-tab:hover { color: var(--dsw-alias-label-primary); }\n.dsdr-tab.is-active { color: var(--dsw-alias-label-primary); border-bottom-color: #146b5a; font-weight: 600; }\n.dsdr-tab-count { display: inline-flex; min-width: 17px; height: 17px; align-items: center; justify-content: center; padding: 0 5px; border-radius: 999px; background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-secondary); font-size: 10px; line-height: 17px; }\n.dsdr-filter-author { flex: 1 1 280px; min-width: 220px; }\n.dsdr-ai-options { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-top: 10px; }\n.dsdr-schedule-status { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--dsw-alias-border-l1); }\n.dsdr-schedule-status-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 10px; }\n.dsdr-history-list { display: flex; flex-wrap: wrap; gap: 4px 12px; }\n.dsdr-history-link { color: #146b5a; font-size: 12px; line-height: 18px; text-decoration: none; }\n.dsdr-history-link:hover { text-decoration: underline; }\n.dsdr-test-results { display: flex; flex-direction: column; gap: 5px; margin: 0 0 10px; padding: 8px 10px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-scan { display: flex; flex-direction: column; gap: 7px; margin: 0 0 12px; padding: 12px; border: 1px dashed var(--dsw-alias-border-l2); border-radius: 10px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-scan-title { font-size: 13px; line-height: 20px; font-weight: 600; }\n.dsdr-scan-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }\n.dsdr-source { display: grid; grid-template-columns: minmax(0, 1.5fr) 150px 34px; gap: 8px; align-items: end; margin-top: 8px; }\n.dsdr-source-docs { grid-template-columns: minmax(0, 1fr) minmax(120px, .35fr) 34px; }\n.dsdr-icon-btn { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; line-height: 1; font-size: 18px; }\n.dsdr-hint { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-error { border: 1px solid var(--dsw-alias-state-error-primary); border-radius: 9px; color: var(--dsw-alias-state-error-primary); background: transparent; padding: 9px 12px; font-size: 12px; line-height: 18px; white-space: pre-wrap; }\n.dsdr-error-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }\n.dsdr-notice { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-ok { color: var(--dsw-alias-state-success-primary); }\n.dsdr-warn { color: var(--dsw-alias-state-warn-primary); }\n.dsdr-bad { color: var(--dsw-alias-state-error-primary); }\n.dsdr-empty { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; padding: 10px 0 2px; }\n.dsdr-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }\n.dsdr-stat { border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; padding: 10px 12px; background: var(--dsw-alias-bg-layer-2); }\n.dsdr-stat-value { font-size: 20px; line-height: 26px; font-weight: 600; }\n.dsdr-stat-label { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 18px; }\n.dsdr-list { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }\n.dsdr-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 18px; }\n.dsdr-dot { flex: none; width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: var(--dsw-alias-state-idle-primary); }\n.dsdr-dot.ok { background: var(--dsw-alias-state-success-primary); }\n.dsdr-dot.warn { background: var(--dsw-alias-state-warn-primary); }\n.dsdr-dot.error { background: var(--dsw-alias-state-error-primary); }\n.dsdr-source-name { font-weight: 500; }\n.dsdr-source-meta { color: var(--dsw-alias-label-secondary); }\n.dsdr-code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; }\n.dsdr-footer { color: var(--dsw-alias-label-secondary); font-size: 11px; line-height: 17px; }\n.dsdr-spacer { flex: 1; }\n@media (max-width: 780px) { .dsdr-page { padding: 20px 16px 40px; } .dsdr-hero-action { flex: 1 0 100%; width: 100%; align-items: stretch; margin-left: 0; } .dsdr-hero-buttons { width: 100%; } .dsdr-hero-buttons .dsdr-btn { flex: 1; } .dsdr-split { flex: 1; } .dsdr-split .dsdr-generate { flex: 1; } .dsdr-generate { width: 100%; } .dsdr-ai-options { grid-template-columns: 1fr; } .dsdr-range { grid-template-columns: 1fr 1fr; } .dsdr-range .dsdr-actions { grid-column: 1 / -1; } .dsdr-stats { grid-template-columns: 1fr 1fr; } .dsdr-scan-row { grid-template-columns: 1fr; } .dsdr-manual-add { grid-template-columns: 1fr; } .dsdr-source, .dsdr-source-docs { grid-template-columns: 1fr; } .dsdr-source .dsdr-icon-btn { justify-self: end; } }\n\n.dsdr-confirm-backdrop { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, .38); }\n.dsdr-confirm { width: min(400px, 100%); box-sizing: border-box; padding: 18px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 12px; background: var(--dsw-alias-bg-overlay); box-shadow: 0 18px 48px rgba(0, 0, 0, .28); }\n.dsdr-confirm-title { margin: 0 0 8px; font-size: 15px; line-height: 22px; }\n.dsdr-confirm-message { color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 19px; white-space: pre-wrap; }\n.dsdr-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }\n\n\n.dsdr-confirm .dsdr-btn-danger { background: #b42318; border-color: #b42318; color: #ffffff; }\n.dsdr-confirm .dsdr-btn-danger:hover { background: #912018; border-color: #912018; }\n\n\n.dsdr-confirm-backdrop { pointer-events: auto; background: rgba(0, 0, 0, .5); }\n.dsdr-confirm { pointer-events: auto; background: var(--dsw-alias-bg-overlay, var(--dsw-alias-bg-base, #ffffff)); color: var(--dsw-alias-label-primary, #1f2328); }\n.dsdr-confirm .dsdr-btn { pointer-events: auto; }\n\n\n\n.dsdr-confirm { background: #1f2328; color: #f5f7fa; border-color: rgba(255, 255, 255, .16); }\n.dsdr-confirm-title { color: #f5f7fa; }\n.dsdr-confirm-message { color: #c9d1d9; }\n\n\n.dsdr-confirm { background: transparent !important; border: 0 !important; box-shadow: none !important; }\n.dsdr-confirm-panel { width: 100%; background: #1f2328 !important; color: #f5f7fa; }\n\n\n.dsdr-toast-wrap { position: fixed; left: 50%; bottom: 28px; z-index: 1200; transform: translateX(-50%); pointer-events: none; }\n.dsdr-toast { display: flex; align-items: center; gap: 8px; max-width: min(520px, calc(100vw - 48px)); padding: 9px 12px 9px 10px; border: 1px solid rgba(255, 255, 255, .14); border-radius: 10px; background: #1f2328; color: #f5f7fa; font-size: 12px; line-height: 18px; box-shadow: 0 12px 32px rgba(0, 0, 0, .36); pointer-events: auto; animation: dsdr-toast-in .18s ease-out; }\n.dsdr-toast-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; flex: none; border-radius: 50%; background: #146b5a; color: #ffffff; }\n.dsdr-toast-icon.is-error { background: #b42318; }\n.dsdr-toast-text { min-width: 0; overflow-wrap: anywhere; }\n.dsdr-toast-close { flex: none; width: 18px; height: 18px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: #9aa4ad; font-size: 14px; line-height: 16px; cursor: pointer; }\n.dsdr-toast-close:hover { background: rgba(255, 255, 255, .1); color: #ffffff; }\n@keyframes dsdr-toast-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }\n\n\n.dsdr-menu-sep { height: 1px; margin: 4px 6px; background: var(--dsw-alias-border-l2); }\n.dsdr-menu-item-danger { color: #e5534b; }\n.dsdr-menu-item-danger:hover { background: rgba(229, 83, 75, .12); }\n\n\n.dsdr-group-select { min-width: 240px; }\n.dsdr-group-name { min-width: 160px; }\n\n.dsdr-group-select { width: auto; min-width: 150px; max-width: 260px; }\n.dsdr-group-edit { display: flex; align-items: center; gap: 8px; }\n.dsdr-group-name { width: 150px; }\n.dsdr-schedule-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }\n.dsdr-link-btn { padding: 0; border: 0; background: transparent; color: var(--dsw-alias-label-secondary); font: inherit; font-size: 12px; line-height: 18px; cursor: pointer; text-decoration: none; }\n.dsdr-link-btn:hover { color: var(--dsw-alias-label-primary); text-decoration: underline; }\n\n.dsdr-datasource-actions { flex: none; margin-left: auto; }";
 
   // src/client/styles.js
   function installStyles(ctx) {
@@ -655,6 +733,48 @@ var __DSH_DAILY_REPORT__ = (() => {
 
   // src/client/views/DataSourceCard.jsx
   var import_react7 = __toESM(__require("react"), 1);
+  function GroupPicker({
+    groups,
+    activeGroup,
+    editing,
+    draftName,
+    setDraftName,
+    onChoose,
+    onSubmit,
+    onCancel,
+    t
+  }) {
+    if (editing) {
+      return /* @__PURE__ */ import_react7.default.createElement("div", { className: "dsdr-group-edit" }, /* @__PURE__ */ import_react7.default.createElement(
+        "input",
+        {
+          className: "dsdr-input dsdr-group-name",
+          value: draftName,
+          autoFocus: true,
+          onChange: (event) => setDraftName(event.target.value),
+          onKeyDown: (event) => {
+            if (event.key === "Enter") onSubmit();
+            if (event.key === "Escape") onCancel();
+          },
+          placeholder: t("group.namePlaceholder", "\u5206\u7EC4\u540D\u79F0"),
+          "aria-label": editing === "rename" ? t("group.rename", "\u91CD\u547D\u540D\u5206\u7EC4") : t("group.add", "\u65B0\u5EFA\u5206\u7EC4")
+        }
+      ), /* @__PURE__ */ import_react7.default.createElement("button", { type: "button", className: "dsdr-btn dsdr-btn-primary", onClick: onSubmit }, editing === "rename" ? t("group.save", "\u4FDD\u5B58") : t("group.create", "\u521B\u5EFA")), /* @__PURE__ */ import_react7.default.createElement("button", { type: "button", className: "dsdr-btn", onClick: onCancel }, t("confirm.cancel", "\u53D6\u6D88")));
+    }
+    return /* @__PURE__ */ import_react7.default.createElement(
+      "select",
+      {
+        className: "dsdr-input dsdr-group-select",
+        value: activeGroup ? activeGroup.id : "",
+        onChange: (event) => onChoose(event.target.value),
+        "aria-label": t("group.current", "\u5F53\u524D\u5206\u7EC4")
+      },
+      groups.map((group) => /* @__PURE__ */ import_react7.default.createElement("option", { value: group.id, key: group.id }, group.name)),
+      /* @__PURE__ */ import_react7.default.createElement("option", { value: "__new__" }, "+ " + t("group.add", "\u65B0\u5EFA\u5206\u7EC4") + "\u2026"),
+      /* @__PURE__ */ import_react7.default.createElement("option", { value: "__rename__" }, t("group.rename", "\u91CD\u547D\u540D\u5206\u7EC4") + "\u2026"),
+      groups.length > 1 ? /* @__PURE__ */ import_react7.default.createElement("option", { value: "__remove__" }, t("group.remove", "\u5220\u9664\u5206\u7EC4") + "\u2026") : null
+    );
+  }
   function DataSourceCard() {
     const {
       settings,
@@ -680,6 +800,23 @@ var __DSH_DAILY_REPORT__ = (() => {
       testResults,
       dataSourceTab,
       setDataSourceTab,
+      groups = [],
+      activeGroup = null,
+      groupEditing = "",
+      groupDraft = "",
+      setGroupDraft = () => {
+      },
+      chooseGroup = () => {
+      },
+      submitGroup = () => {
+      },
+      cancelGroupEdit = () => {
+      },
+      switchGroup = () => {
+      },
+      addGroup = () => false,
+      renameGroup = () => false,
+      removeGroup = async () => false,
       confirm = async () => true,
       t
     } = useApp();
@@ -691,7 +828,20 @@ var __DSH_DAILY_REPORT__ = (() => {
           "\u751F\u6210\u65E5\u62A5\u7684\u5185\u5BB9\u6765\u6E90\uFF0C\u53EF\u4EE5\u662F Git \u4ED3\u5E93\u6216\u672C\u5730\u6587\u6863\u3002"
         )
       }
-    ))), /* @__PURE__ */ import_react7.default.createElement(
+    ))), /* @__PURE__ */ import_react7.default.createElement("div", { className: "dsdr-actions dsdr-datasource-actions" }, /* @__PURE__ */ import_react7.default.createElement(
+      GroupPicker,
+      {
+        groups,
+        activeGroup,
+        editing: groupEditing,
+        draftName: groupDraft,
+        setDraftName: setGroupDraft,
+        onChoose: chooseGroup,
+        onSubmit: submitGroup,
+        onCancel: cancelGroupEdit,
+        t
+      }
+    ), /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         type: "button",
@@ -701,7 +851,7 @@ var __DSH_DAILY_REPORT__ = (() => {
       },
       /* @__PURE__ */ import_react7.default.createElement(TestIcon, { size: 14 }),
       /* @__PURE__ */ import_react7.default.createElement("span", null, testingSources ? t("test.testing", "\u6D4B\u8BD5\u4E2D\u2026") : t("test.button", "\u6D4B\u8BD5\u6570\u636E\u6E90"))
-    )), /* @__PURE__ */ import_react7.default.createElement("div", { className: "dsdr-tabs", role: "tablist" }, /* @__PURE__ */ import_react7.default.createElement(
+    ))), /* @__PURE__ */ import_react7.default.createElement("div", { className: "dsdr-tabs", role: "tablist" }, /* @__PURE__ */ import_react7.default.createElement(
       "button",
       {
         type: "button",
@@ -1175,6 +1325,9 @@ var __DSH_DAILY_REPORT__ = (() => {
       t,
       confirm = async () => true
     } = useApp();
+    const [expanded, setExpanded] = import_react11.default.useState(false);
+    const enabled = settings.scheduleEnabled === true;
+    const showDetails = enabled || expanded;
     return /* @__PURE__ */ import_react11.default.createElement(Card, null, /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-card-head" }, /* @__PURE__ */ import_react11.default.createElement("div", null, /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-card-title" }, t("schedule.title", "\u5B9A\u65F6\u6C47\u603B"))), /* @__PURE__ */ import_react11.default.createElement(
       Switch,
       {
@@ -1200,7 +1353,16 @@ var __DSH_DAILY_REPORT__ = (() => {
           }));
         }
       }
-    )), /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-ai-options" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-field" }, /* @__PURE__ */ import_react11.default.createElement("label", { className: "dsdr-label", htmlFor: "dsdr-schedule-frequency" }, t("schedule.frequency", "\u9891\u7387")), /* @__PURE__ */ import_react11.default.createElement(
+    )), /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-hint dsdr-schedule-summary" }, enabled ? t("schedule.summaryOn", "\u5DF2\u542F\u7528\uFF1A") + (settings.scheduleFrequency === "weekly" ? t("schedule.weekly", "\u6BCF\u5468\u4E00") : t("schedule.daily", "\u6BCF\u5929")) + " " + (settings.scheduleTime || "18:30") : t("schedule.summaryOff", "\u672A\u542F\u7528\uFF1B\u9700\u8981\u65F6\u518D\u6253\u5F00\u5F00\u5173\u3002"), enabled ? null : /* @__PURE__ */ import_react11.default.createElement(
+      "button",
+      {
+        type: "button",
+        className: "dsdr-link-btn",
+        onClick: () => setExpanded(!expanded),
+        "aria-expanded": expanded
+      },
+      expanded ? t("schedule.collapse", "\u6536\u8D77\u914D\u7F6E") : t("schedule.expand", "\u5C55\u5F00\u914D\u7F6E")
+    )), showDetails ? /* @__PURE__ */ import_react11.default.createElement(import_react11.default.Fragment, null, /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-ai-options" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-field" }, /* @__PURE__ */ import_react11.default.createElement("label", { className: "dsdr-label", htmlFor: "dsdr-schedule-frequency" }, t("schedule.frequency", "\u9891\u7387")), /* @__PURE__ */ import_react11.default.createElement(
       "select",
       {
         id: "dsdr-schedule-frequency",
@@ -1261,7 +1423,7 @@ var __DSH_DAILY_REPORT__ = (() => {
         download: file.name
       },
       file.name
-    ))) : /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-hint" }, t("schedule.noHistory", "\u6682\u65E0\u5386\u53F2\u6587\u4EF6"))));
+    ))) : /* @__PURE__ */ import_react11.default.createElement("div", { className: "dsdr-hint" }, t("schedule.noHistory", "\u6682\u65E0\u5386\u53F2\u6587\u4EF6")))) : null);
   }
 
   // src/client/views/DailyReportPage.jsx
@@ -1962,33 +2124,41 @@ var __DSH_DAILY_REPORT__ = (() => {
     const [testResults, setTestResults] = import_react17.default.useState(null);
     const [testError, setTestError] = import_react17.default.useState("");
     const [dataSourceTab, setDataSourceTab] = import_react17.default.useState("git");
+    const [groupEditing, setGroupEditing] = import_react17.default.useState("");
+    const [groupDraft, setGroupDraft] = import_react17.default.useState("");
+    const groups = groupsOf(settings);
+    const activeGroup = activeGroupOf(settings);
     function updateGit(index, patch) {
-      setSettings((previous) => ({
-        ...previous,
-        git: previous.git.map(
-          (item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item
-        )
-      }));
+      setSettings(
+        (previous) => withActiveSources(previous, {
+          git: previous.git.map(
+            (item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item
+          )
+        })
+      );
     }
     function updateDoc(index, patch) {
-      setSettings((previous) => ({
-        ...previous,
-        docs: previous.docs.map(
-          (item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item
-        )
-      }));
+      setSettings(
+        (previous) => withActiveSources(previous, {
+          docs: previous.docs.map(
+            (item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item
+          )
+        })
+      );
     }
     function addGit() {
-      setSettings((previous) => ({
-        ...previous,
-        git: [...previous.git, { _key: uid(), location: "", branch: "", label: "" }]
-      }));
+      setSettings(
+        (previous) => withActiveSources(previous, {
+          git: [...previous.git, { _key: uid(), location: "", branch: "", label: "" }]
+        })
+      );
     }
     function addDoc() {
-      setSettings((previous) => ({
-        ...previous,
-        docs: [...previous.docs, { _key: uid(), location: "", label: "" }]
-      }));
+      setSettings(
+        (previous) => withActiveSources(previous, {
+          docs: [...previous.docs, { _key: uid(), location: "", label: "" }]
+        })
+      );
     }
     async function removeGit(index) {
       const item = settings.git[index] || {};
@@ -2001,10 +2171,11 @@ var __DSH_DAILY_REPORT__ = (() => {
         danger: true
       });
       if (!accepted) return;
-      setSettings((previous) => ({
-        ...previous,
-        git: previous.git.filter((_, itemIndex) => itemIndex !== index)
-      }));
+      setSettings(
+        (previous) => withActiveSources(previous, {
+          git: previous.git.filter((_, itemIndex) => itemIndex !== index)
+        })
+      );
     }
     async function removeDoc(index) {
       const item = settings.docs[index] || {};
@@ -2017,10 +2188,11 @@ var __DSH_DAILY_REPORT__ = (() => {
         danger: true
       });
       if (!accepted) return;
-      setSettings((previous) => ({
-        ...previous,
-        docs: previous.docs.filter((_, itemIndex) => itemIndex !== index)
-      }));
+      setSettings(
+        (previous) => withActiveSources(previous, {
+          docs: previous.docs.filter((_, itemIndex) => itemIndex !== index)
+        })
+      );
     }
     async function testSources() {
       if (testingSources) return;
@@ -2132,10 +2304,11 @@ var __DSH_DAILY_REPORT__ = (() => {
           });
         }
         if (additions.length > 0) {
-          setSettings((previous) => ({
-            ...previous,
-            git: [...previous.git, ...additions]
-          }));
+          setSettings(
+            (previous) => withActiveSources(previous, {
+              git: [...previous.git, ...additions]
+            })
+          );
         }
         const warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
         setScanMessage(
@@ -2148,6 +2321,77 @@ var __DSH_DAILY_REPORT__ = (() => {
       } finally {
         setScanning(false);
       }
+    }
+    function chooseGroup(value) {
+      if (value === "__new__") {
+        setGroupDraft("");
+        setGroupEditing("create");
+        return;
+      }
+      if (value === "__rename__") {
+        setGroupDraft(activeGroupOf(settings).name);
+        setGroupEditing("rename");
+        return;
+      }
+      if (value === "__remove__") {
+        void removeGroup();
+        return;
+      }
+      switchGroup(value);
+    }
+    function cancelGroupEdit() {
+      setGroupEditing("");
+      setGroupDraft("");
+    }
+    function submitGroup() {
+      const done = groupEditing === "rename" ? renameGroup(groupDraft) : addGroup(groupDraft);
+      if (done) cancelGroupEdit();
+    }
+    function switchGroup(id) {
+      setSettings((previous) => withGroups(previous, groupsOf(previous), id));
+    }
+    function addGroup(name) {
+      const label = String(name || "").trim();
+      if (label.length === 0) return false;
+      setSettings((previous) => {
+        const list = groupsOf(previous);
+        const created = { id: uid(), name: label, git: [], docs: [] };
+        return withGroups(previous, [...list, created], created.id);
+      });
+      return true;
+    }
+    function renameGroup(name) {
+      const label = String(name || "").trim();
+      if (label.length === 0) return false;
+      setSettings((previous) => {
+        const target = activeGroupOf(previous);
+        const list = groupsOf(previous).map(
+          (group) => group.id === target.id ? { ...group, name: label } : group
+        );
+        return withGroups(previous, list, target.id);
+      });
+      return true;
+    }
+    async function removeGroup() {
+      const target = activeGroupOf(settings);
+      if (groups.length <= 1) return false;
+      const accepted = await confirm({
+        title: t("confirm.removeGroup.title", "\u5220\u9664\u5206\u7EC4\uFF1F"),
+        message: t("confirm.removeGroup.message", "\u5C06\u5220\u9664\u5206\u7EC4\u300C") + target.name + t("confirm.removeGroup.tail", "\u300D\u53CA\u5176\u4E2D\u7684 ") + target.git.length + t("git.unit", " \u4E2A\u4ED3\u5E93\u3001") + target.docs.length + t("docs.unit", " \u4E2A\u6587\u6863\u3002"),
+        confirmLabel: t("confirm.remove", "\u5220\u9664"),
+        cancelLabel: t("confirm.cancel", "\u53D6\u6D88"),
+        danger: true
+      });
+      if (!accepted) return false;
+      setSettings((previous) => {
+        const list = groupsOf(previous).filter((group) => group.id !== target.id);
+        if (list.length === 0) {
+          const fallback = normalizeGroups({}, [], []);
+          return withGroups(previous, fallback, fallback[0].id);
+        }
+        return withGroups(previous, list, list[0].id);
+      });
+      return true;
     }
     return {
       showScan,
@@ -2170,7 +2414,19 @@ var __DSH_DAILY_REPORT__ = (() => {
       testSources,
       toggleScan,
       pickScanDirectory,
-      scanAndAdd
+      scanAndAdd,
+      groups,
+      activeGroup,
+      groupEditing,
+      groupDraft,
+      setGroupDraft,
+      chooseGroup,
+      submitGroup,
+      cancelGroupEdit,
+      switchGroup,
+      addGroup,
+      renameGroup,
+      removeGroup
     };
   }
 
@@ -2886,7 +3142,19 @@ var __DSH_DAILY_REPORT__ = (() => {
       testSources,
       toggleScan,
       pickScanDirectory,
-      scanAndAdd
+      scanAndAdd,
+      groups,
+      activeGroup,
+      switchGroup,
+      addGroup,
+      renameGroup,
+      groupEditing,
+      groupDraft,
+      setGroupDraft,
+      chooseGroup,
+      submitGroup,
+      cancelGroupEdit,
+      removeGroup
     } = useDataSources({
       settings,
       setSettings,
@@ -3043,6 +3311,18 @@ var __DSH_DAILY_REPORT__ = (() => {
       updateDoc,
       removeDoc,
       addDoc,
+      groups,
+      activeGroup,
+      switchGroup,
+      addGroup,
+      renameGroup,
+      groupEditing,
+      groupDraft,
+      setGroupDraft,
+      chooseGroup,
+      submitGroup,
+      cancelGroupEdit,
+      removeGroup,
       loading,
       loadError,
       error,
